@@ -51,19 +51,16 @@ function SignIn() {
 }
 
 function Memorization(){
-    const query = firestore.collection('cards');
-
-    const [cards] = useCollectionData(query,{ idField: 'id' });
 
     return (
         <>
             <div style={{display: "flex", flexDirection: "column"}}>
                 <main style={{grow: 1, display: "flex", flexDirection: "row"}}>
                     <aside style={{width: "25%"}}>
-
+                        <AddCard/>
                     </aside>
                     <article style={{flexGrow: "1"}}>
-                        {cards && cards.map(card => <div><h2>{card.front}</h2><h2>{card.back}</h2></div>)}
+                        <Review/>
                     </article>
                     <nav style={{width: "20%"}}>
 
@@ -72,6 +69,55 @@ function Memorization(){
             </div>
     </>
     )
+}
+
+function AddCard(){
+    const query = firestore.collection('cards');
+
+    const [front, setFront] = useState('');
+    const [back, setBack] = useState('');
+
+    const addCard = async (e) => {
+        e.preventDefault();
+        const revDate = new Date();
+        revDate.setSeconds(revDate.getSeconds()+ 5);
+        await query.add({front:front, back:back, state:0, reviewDate:new Date()});
+
+        setFront('');
+        setBack('');
+    };
+
+    return (
+        <>
+            <form>
+                <label htmlFor="front"><b>Front</b></label>
+                <input type="text" placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
+                <label htmlFor="back"><b>Back</b></label>
+                <input type="text" placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
+                <button type="submit" onClick={addCard}>Add</button>
+            </form>
+        </>
+    )
+}
+
+function Review() {
+    const curDate = new Date();
+    curDate.setMilliseconds(0);
+    const query = firestore.collection('cards').limit(1).where("reviewDate", "<", curDate);
+
+    const [cards] = useCollectionData(query,{ idField: 'id' });
+
+    console.log(cards, curDate.getSeconds());
+
+    return(<>
+        {cards && cards.map(card => <CardReview card={card}/>)}
+        </>)
+}
+
+function CardReview(props) {
+    return(<>
+        
+    </>)
 }
 
 export default App;
