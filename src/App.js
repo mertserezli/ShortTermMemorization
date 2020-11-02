@@ -63,7 +63,7 @@ function Memorization(){
                         <Review/>
                     </article>
                     <nav style={{width: "20%"}}>
-
+                        <Graduated/>
                     </nav>
                 </main>
             </div>
@@ -179,6 +179,32 @@ function CardReview(props) {
             <button onClick={() => setShow(true)}>Show</button>
         }
     </>)
+}
+
+function Graduated(){
+    const path = firestore.collection('cards');
+    const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
+
+    const removeCard = async (cardId) => {
+        await path.doc(cardId).delete();
+    };
+
+    return(<div>
+        <h1>Graduated Cards</h1>
+        <table>
+            <thead>
+                <th>Front</th>
+                <th>Back</th>
+                <th>Remove</th>
+            </thead>
+            {cards && cards.map(c =>
+                <tr key={c.id}>
+                    <td>{c.front}</td>
+                    <td>{c.back}</td>
+                    <td><button onClick={() => removeCard(c.id)}>Remove Card</button></td>
+                </tr>)}
+        </table>
+    </div>)
 }
 
 export default App;
