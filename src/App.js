@@ -56,13 +56,13 @@ function Memorization(){
         <>
             <div style={{display: "flex", flexDirection: "column"}}>
                 <main style={{grow: 1, display: "flex", flexDirection: "row"}}>
-                    <aside style={{width: "25%"}}>
+                    <aside style={{width: "20%"}}>
                         <AddCard/>
                     </aside>
                     <article style={{flexGrow: "1"}}>
                         <Review/>
                     </article>
-                    <nav style={{width: "20%"}}>
+                    <nav style={{width: "25%"}}>
                         <CardManager/>
                         <Graduated/>
                     </nav>
@@ -89,12 +89,12 @@ function AddCard(){
     };
 
     return (
-        <div>
-            <form style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap"}}>
+        <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+            <form style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
                 <label htmlFor="front"><b>Front</b></label>
-                <textarea placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
+                <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} required/>
                 <label htmlFor="back"><b>Back</b></label>
-                <textarea placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
+                <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} required/>
                 <button type="submit" onClick={addCard}>Add</button>
             </form>
         </div>
@@ -104,6 +104,12 @@ function AddCard(){
 function Review() {
     const [curDate, setDate] = useState(new Date());
     curDate.setMilliseconds(0);
+
+    if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification");
+    } else {
+        Notification.requestPermission();
+    }
 
     useEffect(() => {
         const interval = setInterval(() => {
