@@ -119,13 +119,6 @@ function Review() {
         return () => clearInterval(interval);
     }, []);
 
-    if (!("Notification" in window)) {
-        console.log("This browser does not support desktop notification");
-    } else {
-        Notification.requestPermission();
-    }
-
-
     const path = firestore.collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
