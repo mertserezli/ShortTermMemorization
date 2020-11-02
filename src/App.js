@@ -155,6 +155,8 @@ function CardReview(props) {
     const [show, setShow] = useState(false);
 
     const changeState = async (card, state) => {
+        setShow(false);
+        
         if (state < 0)
             state = 0;
         const newReviewDate = new Date();
