@@ -63,6 +63,7 @@ function Memorization(){
                         <Review/>
                     </article>
                     <nav style={{width: "20%"}}>
+                        <CardManager/>
                         <Graduated/>
                     </nav>
                 </main>
@@ -91,9 +92,9 @@ function AddCard(){
         <div>
             <form style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap"}}>
                 <label htmlFor="front"><b>Front</b></label>
-                <textarea type="text" placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
+                <textarea placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
                 <label htmlFor="back"><b>Back</b></label>
-                <textarea type="text" placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
+                <textarea placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
                 <button type="submit" onClick={addCard}>Add</button>
             </form>
         </div>
@@ -195,16 +196,52 @@ function Graduated(){
         <h1>Graduated Cards</h1>
         <table>
             <thead>
+            <tr>
                 <th>Front</th>
                 <th>Back</th>
                 <th>Remove</th>
+            </tr>
             </thead>
+            <tbody>
             {cards && cards.map(c =>
                 <tr key={c.id}>
                     <td>{c.front}</td>
                     <td>{c.back}</td>
                     <td><button onClick={() => removeCard(c.id)}>Remove Card</button></td>
                 </tr>)}
+            </tbody>
+        </table>
+    </div>)
+}
+
+function CardManager() {
+    const path = firestore.collection('cards');
+    const [cards] = useCollectionData(path,{ idField: 'id' });
+
+    const removeCard = async (cardId) => {
+        await path.doc(cardId).delete();
+    };
+
+    return(<div>
+        <h1>All Cards</h1>
+        <table>
+            <thead>
+            <tr>
+                <th>Front</th>
+                <th>State</th>
+                <th>Review Date</th>
+                <th>Remove</th>
+            </tr>
+            </thead>
+            <tbody>
+            {cards && cards.map(c =>
+                <tr key={c.id}>
+                    <td>{c.front}</td>
+                    <td>{c.state}</td>
+                    <td>{c.reviewDate.toDate().toLocaleString()}</td>
+                    <td><button onClick={() => removeCard(c.id)}>X</button></td>
+                </tr>)}
+            </tbody>
         </table>
     </div>)
 }
