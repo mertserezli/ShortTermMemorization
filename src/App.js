@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 import firebase from 'firebase/app';
@@ -124,7 +124,8 @@ function Review() {
 
     const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
 
-    console.log(cards, curDate.getSeconds());
+    if (haveReviews)
+        new Notification('Do Reviews');
 
     return(<>
         {haveReviews &&
