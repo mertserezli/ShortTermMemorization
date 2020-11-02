@@ -88,15 +88,15 @@ function AddCard(){
     };
 
     return (
-        <>
-            <form>
+        <div>
+            <form style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap"}}>
                 <label htmlFor="front"><b>Front</b></label>
-                <input type="text" placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
+                <textarea type="text" placeholder="Enter Front Side" name="front" id="front" onChange={(e) => setFront(e.target.value)} required/>
                 <label htmlFor="back"><b>Back</b></label>
-                <input type="text" placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
+                <textarea type="text" placeholder="Enter Back Side" name="back" id="back" onChange={(e) => setBack(e.target.value)} required/>
                 <button type="submit" onClick={addCard}>Add</button>
             </form>
-        </>
+        </div>
     )
 }
 
@@ -128,10 +128,12 @@ function Review() {
         new Notification('Do Reviews');
 
     return(<>
-        {haveReviews &&
-        <div>
-            <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date())[0]}/>
-        </div>
+        {haveReviews ?
+            <div>
+                <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date())[0]}/>
+            </div>
+        :
+            <h2>No reviews left</h2>
         }
         </>)
 }
