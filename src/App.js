@@ -117,15 +117,20 @@ function Review() {
             curDate.setMilliseconds(0);
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [curDate]);
 
     const path = firestore.collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
     const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
 
-    if (haveReviews)
-        new Notification('Do Reviews');
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (haveReviews)
+                new Notification('Do Reviews');
+        }, 10* 1000);
+        return () => clearInterval(interval);
+    }, [haveReviews]);
 
     return(<>
         {haveReviews ?
