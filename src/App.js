@@ -101,22 +101,82 @@ function AddCard(){
 }
 
 function Review() {
-    const curDate = new Date();
+    const [curDate, setDate] = useState(new Date());
     curDate.setMilliseconds(0);
-    const query = firestore.collection('cards').limit(1).where("reviewDate", "<", curDate);
 
-    const [cards] = useCollectionData(query,{ idField: 'id' });
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setDate(new Date());
+            curDate.setMilliseconds(0);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification");
+    } else {
+        Notification.requestPermission();
+    }
+
+
+    const path = firestore.collection('cards');
+    const [cards] = useCollectionData(path,{ idField: 'id' });
+
+    const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
 
     console.log(cards, curDate.getSeconds());
 
     return(<>
-        {cards && cards.map(card => <CardReview card={card}/>)}
+        {haveReviews &&
+        <div>
+            <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date())[0]}/>
+        </div>
+        }
         </>)
 }
 
 function CardReview(props) {
+    const card = props.card;
+    const path = firestore.collection('cards');
+    const stateToTime = {
+        0: 5,
+        1: 25,
+        2: 2*60,
+        3: 10*60,
+        4: 60*60,
+        5: 5*60*60,
+        6: 24*60*60,
+    };
+
+    const [show, setShow] = useState(false);
+
+    const changeState = async (card, state) => {
+        if (state < 0)
+            state = 0;
+        const newReviewDate = new Date();
+        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[state]);
+        await path.doc(card.id).set({
+            front:card.front,
+            back: card.back,
+            reviewDate: newReviewDate,
+            state: state
+        });
+    };
+
     return(<>
-        
+        <div>
+            <p>{card.front}</p>
+            <hr/>
+            {show ? <p>{card.back}</p> : <p/>}
+        </div>
+        {show ?
+            <div>
+                <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
+                <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
+            </div>
+            :
+            <button onClick={() => setShow(true)}>Show</button>
+        }
     </>)
 }
 
