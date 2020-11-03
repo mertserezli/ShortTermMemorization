@@ -142,7 +142,7 @@ function Review() {
     return(<>
         {haveReviews ?
             <div>
-                <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date())[0]}/>
+                <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7)[0]}/>
             </div>
         :
             <h2>No reviews left</h2>
@@ -161,6 +161,7 @@ function CardReview(props) {
         4: 60*60,
         5: 5*60*60,
         6: 24*60*60,
+        7: 1,
     };
 
     const [show, setShow] = useState(false);
