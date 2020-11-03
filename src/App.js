@@ -173,6 +173,27 @@ function CardReview(props) {
         });
     };
 
+    const keyPress = (event) => {
+        if(event.key === '1' && show){
+            changeState(card, card.state - 1)
+        }
+        else if(event.key === ' '){
+            if(show) {
+                changeState(card, card.state + 1)
+            } else{
+                setShow(true)
+            }
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener("keydown", keyPress, false);
+
+        return () => {
+            document.removeEventListener("keydown", keyPress, false);
+        };
+    }, [keyPress]);
+
     return(<>
         <div>
             <p>{card.front}</p>
