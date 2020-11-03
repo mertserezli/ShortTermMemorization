@@ -50,6 +50,12 @@ function SignIn() {
 
 }
 
+function SignOut() {
+    return auth.currentUser && (
+        <button className="sign-out" onClick={() => auth.signOut()}>Sign Out</button>
+    )
+}
+
 function Memorization(){
 
     return (
@@ -63,6 +69,7 @@ function Memorization(){
                         <Review/>
                     </article>
                     <nav style={{width: "25%"}}>
+                        <SignOut/>
                         <CardManager/>
                         <Graduated/>
                     </nav>
