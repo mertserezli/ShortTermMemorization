@@ -196,9 +196,9 @@ function CardReview(props) {
 
     return(<>
         <div>
-            <p>{card.front}</p>
+            <pre>{card.front}</pre>
             <hr/>
-            {show ? <p>{card.back}</p> : <p/>}
+            {show ? <pre>{card.back}</pre> : <p/>}
         </div>
         {show ?
             <div>
