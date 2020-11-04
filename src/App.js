@@ -154,11 +154,12 @@ function Review() {
 
 function CardReview(props) {
     const card = props.card;
-    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
 
     const [show, setShow] = useState(false);
 
     const changeState = useCallback(async (card, state) => {
+        const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
+
         const stateToTime = {
             0: 5,
             1: 25,
@@ -182,7 +183,7 @@ function CardReview(props) {
             reviewDate: newReviewDate,
             state: state
         });
-    }, [path]);
+    }, []);
 
     useEffect(() => {
         const keyPress = (event) => {
