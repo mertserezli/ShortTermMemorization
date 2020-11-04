@@ -91,7 +91,7 @@ function AddCard(){
         e.preventDefault();
         const revDate = new Date();
         revDate.setSeconds(revDate.getSeconds()+ 5);
-        await query.add({front:front, back:back, state:0, reviewDate:new Date()});
+        await query.add({front:front, back:back, state:0, reviewDate:revDate});
 
         setFront('');
         setBack('');
