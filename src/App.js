@@ -80,7 +80,7 @@ function Memorization(){
 }
 
 function AddCard(){
-    const query = firestore.collection('cards');
+    const query = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
 
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
@@ -126,7 +126,7 @@ function Review() {
         return () => clearInterval(interval);
     }, [curDate]);
 
-    const path = firestore.collection('cards');
+    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
     const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
@@ -152,7 +152,7 @@ function Review() {
 
 function CardReview(props) {
     const card = props.card;
-    const path = firestore.collection('cards');
+    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const stateToTime = {
         0: 5,
         1: 25,
@@ -220,7 +220,7 @@ function CardReview(props) {
 }
 
 function Graduated(){
-    const path = firestore.collection('cards');
+    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
 
     const removeCard = async (cardId) => {
@@ -250,7 +250,7 @@ function Graduated(){
 }
 
 function CardManager() {
-    const path = firestore.collection('cards');
+    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
     const removeCard = async (cardId) => {
