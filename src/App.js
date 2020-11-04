@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
 import firebase from 'firebase/app';
@@ -153,22 +153,23 @@ function Review() {
 function CardReview(props) {
     const card = props.card;
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
-    const stateToTime = {
-        0: 5,
-        1: 25,
-        2: 2*60,
-        3: 10*60,
-        4: 60*60,
-        5: 5*60*60,
-        6: 24*60*60,
-        7: 1,
-    };
 
     const [show, setShow] = useState(false);
 
-    const changeState = async (card, state) => {
+    const changeState = useCallback(async (card, state) => {
+        const stateToTime = {
+            0: 5,
+            1: 25,
+            2: 2*60,
+            3: 10*60,
+            4: 60*60,
+            5: 5*60*60,
+            6: 24*60*60,
+            7: 1,
+        };
+
         setShow(false);
-        
+
         if (state < 0)
             state = 0;
         const newReviewDate = new Date();
@@ -179,28 +180,28 @@ function CardReview(props) {
             reviewDate: newReviewDate,
             state: state
         });
-    };
-
-    const keyPress = (event) => {
-        if(event.key === '1' && show){
-            changeState(card, card.state - 1)
-        }
-        else if(event.key === ' '){
-            if(show) {
-                changeState(card, card.state + 1)
-            } else{
-                setShow(true)
-            }
-        }
-    };
+    }, [path]);
 
     useEffect(() => {
+        const keyPress = (event) => {
+            if(event.key === '1' && show){
+                changeState(card, card.state - 1)
+            }
+            else if(event.key === ' '){
+                if(show) {
+                    changeState(card, card.state + 1)
+                } else{
+                    setShow(true)
+                }
+            }
+        };
+
         document.addEventListener("keydown", keyPress, false);
 
         return () => {
             document.removeEventListener("keydown", keyPress, false);
         };
-    }, [keyPress]);
+    }, [card, changeState, show]);
 
     return(<>
         <div>
