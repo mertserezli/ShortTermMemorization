@@ -207,9 +207,9 @@ function CardReview(props) {
 
     return(<>
         <div>
-            <pre>{card.front}</pre>
+            <pre style={{textAlign:"center"}}>{card.front}</pre>
             <hr/>
-            {show ? <pre>{card.back}</pre> : <p/>}
+            {show ? <pre style={{textAlign:"center"}}>{card.back}</pre> : <p/>}
         </div>
         {show ?
             <div>
