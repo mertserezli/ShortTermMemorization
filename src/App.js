@@ -28,7 +28,9 @@ function App() {
 
   return (
     <div className="App">
-      <section>
+        <h1 style={{textAlign:"center"}}>Short Term Memorization App</h1>
+
+        <section>
         {user ? <Memorization /> : <SignIn />}
       </section>
     </div>
@@ -43,9 +45,9 @@ function SignIn() {
   };
 
   return (
-      <>
+      <div style={{textAlign:"center"}}>
         <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
-      </>
+      </div>
   )
 
 }
