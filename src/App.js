@@ -81,17 +81,20 @@ function Memorization(){
     )
 }
 
-function AddCard(){
+const addCard = async (front, back) => {
     const query = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
 
+    const revDate = new Date();
+    revDate.setSeconds(revDate.getSeconds()+ 5);
+    await query.add({front:front, back:back, state:0, reviewDate:revDate});
+};
+
+function AddCard(){
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
 
-    const addCard = async (e) => {
-        e.preventDefault();
-        const revDate = new Date();
-        revDate.setSeconds(revDate.getSeconds()+ 5);
-        await query.add({front:front, back:back, state:0, reviewDate:revDate});
+    const onAddCard = () => {
+        addCard(front, back);
 
         setFront('');
         setBack('');
@@ -104,7 +107,7 @@ function AddCard(){
                 <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} required/>
                 <label htmlFor="back"><b>Back</b></label>
                 <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} required/>
-                <button type="submit" onClick={addCard}>Add</button>
+                <button type="submit" onClick={()=>onAddCard()}>Add</button>
             </form>
         </div>
     )
@@ -282,6 +285,13 @@ function CardManager() {
         await path.doc(cardId).delete();
     };
 
+    const importJSON = e => {
+        const fileReader = new FileReader();
+        fileReader.readAsText(e.target.files[0], "UTF-8");
+        fileReader.onload = e => {
+            let cardsToImport = JSON.parse(e.target.result);
+            cardsToImport.forEach(c => addCard(c.front, c.back));
+        };
     };
 
     return(<div>
@@ -308,6 +318,8 @@ function CardManager() {
         <button onClick={() => exportToJson(cards)}>
             Export
         </button>
+        <label htmlFor="avatar">Import:</label>
+        <input type="file" id="avatar" name="import" accept=".json" onChange={importJSON}/>
     </div>)
 }
 
