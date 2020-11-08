@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
+import alert from './done-for-you-612.mp3';
+
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
@@ -137,10 +139,13 @@ function Review() {
     const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
 
     useEffect(() => {
+        const audio = new Audio(alert);
         const interval = setInterval(() => {
-            if (haveReviews)
+            if (haveReviews) {
                 new Notification('Do Reviews');
-        }, 10* 1000);
+                audio.play()
+            }
+        }, 10 * 1000);
         return () => clearInterval(interval);
     }, [haveReviews]);
 
