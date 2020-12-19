@@ -63,23 +63,19 @@ function SignOut() {
 function Memorization(){
 
     return (
-        <>
-            <div style={{display: "flex", flexDirection: "column"}}>
-                <main style={{grow: 1, display: "flex", flexDirection: "row"}}>
-                    <aside style={{width: "20%"}}>
-                        <AddCard/>
-                    </aside>
-                    <article style={{flexGrow: "1"}}>
-                        <Review/>
-                    </article>
-                    <nav style={{width: "25%"}}>
-                        <SignOut/>
-                        <CardManager/>
-                        <Graduated/>
-                    </nav>
-                </main>
-            </div>
-    </>
+    <div className="grid-container">
+        <div className="addCard">
+            <AddCard/>
+        </div>
+        <div className="review">
+            <Review/>
+        </div>
+        <div className="cardManager">
+            <SignOut/>
+            <CardManager/>
+            <Graduated/>
+        </div>
+    </div>
     )
 }
 
@@ -95,7 +91,8 @@ function AddCard(){
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
 
-    const onAddCard = () => {
+    const onAddCard = (e) => {
+        e.preventDefault();
         addCard(front, back);
 
         setFront('');
@@ -104,12 +101,12 @@ function AddCard(){
 
     return (
         <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-            <form style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
+            <form onSubmit={onAddCard} style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
                 <label htmlFor="front"><b>Front</b></label>
-                <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} required/>
+                <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} />
                 <label htmlFor="back"><b>Back</b></label>
-                <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} required/>
-                <button type="submit" onClick={()=>onAddCard()}>Add</button>
+                <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} />
+                <button type="submit">Add</button>
             </form>
         </div>
     )

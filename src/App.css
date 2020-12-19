@@ -5,3 +5,15 @@ table, th, td {
 th, td{
     padding: 10px;
 }
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 10px;
+    grid-template-areas:
+            "addCard review cardManager";
+}
+.addCard { grid-area: addCard; }
+.review { grid-area: review; }
+.cardManager { grid-area: cardManager; }
