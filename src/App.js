@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import './App.css';
 
 import alert from './done-for-you-612.mp3';
@@ -24,19 +24,23 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const firestore = firebase.firestore();
 
+const ShowNotifications = createContext(null);
+
 function App() {
+    const [showNotifications, setShowNotifications] = useState(true)
+    const [user] = useAuthState(auth);
 
-  const [user] = useAuthState(auth);
+    return (
+    <ShowNotifications.Provider value={{showNotifications, setShowNotifications}}>
+        <div className="App">
+            <h1 style={{textAlign:"center"}}>Short Term Memorization App</h1>
 
-  return (
-    <div className="App">
-        <h1 style={{textAlign:"center"}}>Short Term Memorization App</h1>
-
-        <section>
-        {user ? <Memorization /> : <SignIn />}
-      </section>
-    </div>
-  );
+            <section>
+            {user ? <Memorization /> : <SignIn />}
+          </section>
+        </div>
+    </ShowNotifications.Provider>
+    );
 }
 
 function SignIn() {
@@ -60,6 +64,13 @@ function SignOut() {
     )
 }
 
+function ToggleNotifications() {
+    const {showNotifications, setShowNotifications} = useContext(ShowNotifications);
+    return (
+    <button onClick={() => setShowNotifications(!showNotifications)}>toggle notifications:{showNotifications ? "on" : "off"}</button>
+    )
+}
+
 function Memorization(){
 
     return (
@@ -71,6 +82,7 @@ function Memorization(){
             <Review/>
         </div>
         <div className="cardManager">
+            <ToggleNotifications/>
             <SignOut/>
             <CardManager/>
             <Graduated/>
@@ -113,6 +125,8 @@ function AddCard(){
 }
 
 function Review() {
+    const {showNotifications} = useContext(ShowNotifications);
+
     const [curDate, setDate] = useState(new Date());
     curDate.setMilliseconds(0);
 
@@ -138,13 +152,13 @@ function Review() {
     useEffect(() => {
         const audio = new Audio(alert);
         const interval = setInterval(() => {
-            if (haveReviews) {
+            if (haveReviews && showNotifications) {
                 new Notification('Do Reviews');
                 audio.play()
             }
         }, 10 * 1000);
         return () => clearInterval(interval);
-    }, [haveReviews]);
+    }, [haveReviews, showNotifications]);
 
     return(<>
         {haveReviews ?
