@@ -6,6 +6,7 @@ import alert from './done-for-you-612.mp3';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
+import 'firebase/storage';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -20,14 +21,16 @@ firebase.initializeApp({
   appId: "1:440994357739:web:db860414b9b1b007e479ae",
   measurementId: "G-0KFM767G9X"
 });
+import { v4 as uuidv4 } from 'uuid';
 
 const auth = firebase.auth();
 const firestore = firebase.firestore();
+const storage = firebase.storage();
 
 const ShowNotifications = createContext(null);
 
 function App() {
-    const [showNotifications, setShowNotifications] = useState(true)
+    const [showNotifications, setShowNotifications] = useState(true);
     const [user] = useAuthState(auth);
 
     return (
@@ -91,24 +94,37 @@ function Memorization(){
     )
 }
 
-const addCard = async (front, back) => {
+const addCard = async (front, back, image, showOnQuestion) => {
     const query = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
 
     const revDate = new Date();
     revDate.setSeconds(revDate.getSeconds()+ 5);
-    await query.add({front:front, back:back, state:0, reviewDate:revDate});
+    const id = uuidv4();
+
+    if(image) {
+        storage.ref(`/${auth.currentUser.uid}/${id}`).put(image, {contentType: 'image/jpg'});
+        await query.add({front, back, image: id, showOnQuestion, state:0, reviewDate:revDate});
+    }else {
+        await query.add({front, back, showOnQuestion, state:0, reviewDate:revDate});
+    }
 };
 
 function AddCard(){
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
+    const [imageURL, setImageUrl] = useState('');
+    const [image, setImage] = useState(null);
+    const [showOnQuestion, setShowOnQuestion] = useState(false);
 
     const onAddCard = (e) => {
         e.preventDefault();
-        addCard(front, back);
+        addCard(front, back, image, showOnQuestion);
 
         setFront('');
         setBack('');
+        setImage(null);
+        setImageUrl('');
+        setShowOnQuestion(false);
     };
 
     return (
@@ -118,6 +134,16 @@ function AddCard(){
                 <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} />
                 <label htmlFor="back"><b>Back</b></label>
                 <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} />
+                <label htmlFor="image"><b>Image</b></label>
+                <input type="file" id="image" onChange={(e) => {
+                    setImage(e.target.files[0]);
+                    setImageUrl(URL.createObjectURL(e.target.files[0]));
+                }}/>
+                <img src={imageURL} alt={"preview"}/>
+                <div onChange={(e) => e.target.value === "Question" ? setShowOnQuestion(true) : setShowOnQuestion(false)}>
+                    <input type="radio" value="Question" name="showOnQuestion" /> Show On Question
+                    <input type="radio" value="Answer" name="showOnQuestion" /> Show On Answer
+                </div>
                 <button type="submit">Add</button>
             </form>
         </div>
@@ -175,6 +201,7 @@ function CardReview(props) {
     const card = props.card;
 
     const [show, setShow] = useState(false);
+    const [imgUrl, setImgUrl] = useState("");
 
     const changeState = useCallback(async (card, state) => {
         const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
@@ -225,16 +252,24 @@ function CardReview(props) {
         };
     }, [card, changeState, show]);
 
+    if (card.image) {
+        storage.ref(`/${auth.currentUser.uid}/${card.image}`).getDownloadURL().then((url) => setImgUrl(url));
+    }
+
     return(<>
         <div>
+            {card.showOnQuestion && <img src={imgUrl} alt={"question"}/>}
             <pre style={{textAlign:"center"}}>{card.front}</pre>
             <hr/>
             {show ? <pre style={{textAlign:"center"}}>{card.back}</pre> : <p/>}
         </div>
         {show ?
             <div>
-                <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
-                <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
+                {imgUrl && !card.showOnQuestion && <img src={imgUrl} alt={"answer"}/>}
+                <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                    <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
+                    <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
+                </div>
             </div>
             :
             <button onClick={() => setShow(true)}>Show</button>
@@ -264,8 +299,9 @@ function Graduated(){
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
 
-    const removeCard = async (cardId) => {
-        await path.doc(cardId).delete();
+    const removeCard = async (cardId, cardImage) => {
+        storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        path.doc(cardId).delete();
     };
 
     return(<div>
@@ -283,7 +319,7 @@ function Graduated(){
                 <tr key={c.id}>
                     <td>{c.front}</td>
                     <td>{c.back}</td>
-                    <td><button onClick={() => removeCard(c.id)}>Remove Card</button></td>
+                    <td><button onClick={() => removeCard(c.id, c.image)}>Remove Card</button></td>
                 </tr>)}
             </tbody>
         </table>
@@ -297,8 +333,9 @@ function CardManager() {
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
-    const removeCard = async (cardId) => {
-        await path.doc(cardId).delete();
+    const removeCard = async (cardId, cardImage) => {
+        storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        path.doc(cardId).delete();
     };
 
     const importJSON = e => {
@@ -327,7 +364,7 @@ function CardManager() {
                     <td>{c.front}</td>
                     <td>{c.state}</td>
                     <td>{c.reviewDate.toDate().toLocaleString()}</td>
-                    <td><button onClick={() => removeCard(c.id)}>X</button></td>
+                    <td><button onClick={() => removeCard(c.id, c.image)}>X</button></td>
                 </tr>)}
             </tbody>
         </table>
