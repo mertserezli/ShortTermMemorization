@@ -128,7 +128,7 @@ function AddCard(){
     };
 
     return (
-        <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+        <div className={"centerContents"}>
             <form onSubmit={onAddCard} style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
                 <label htmlFor="front"><b>Front</b></label>
                 <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} />
@@ -266,7 +266,7 @@ function CardReview(props) {
         {show ?
             <div>
                 {imgUrl && !card.showOnQuestion && <img src={imgUrl} alt={"answer"}/>}
-                <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+                <div className={"centerContents"}>
                     <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
                     <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
                 </div>
