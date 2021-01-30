@@ -300,7 +300,9 @@ function Graduated(){
     const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
 
     const removeCard = async (cardId, cardImage) => {
-        storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        if(cardImage) {
+            storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        }
         path.doc(cardId).delete();
     };
 
@@ -334,7 +336,9 @@ function CardManager() {
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
     const removeCard = async (cardId, cardImage) => {
-        storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        if(cardImage) {
+            storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+        }
         path.doc(cardId).delete();
     };
 
