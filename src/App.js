@@ -318,9 +318,12 @@ function Graduated(){
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
 
-    const removeCard = async (cardId, cardImage) => {
-        if(cardImage) {
-            storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+    const removeCard = async (cardId, QImageId, AImageId) => {
+        if(QImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
+        }
+        if(AImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
         }
         path.doc(cardId).delete();
     };
@@ -340,7 +343,7 @@ function Graduated(){
                 <tr key={c.id}>
                     <td>{c.front}</td>
                     <td>{c.back}</td>
-                    <td><button onClick={() => removeCard(c.id, c.image)}>Remove Card</button></td>
+                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>Remove Card</button></td>
                 </tr>)}
             </tbody>
         </table>
