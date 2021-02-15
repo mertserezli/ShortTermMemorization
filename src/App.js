@@ -94,37 +94,47 @@ function Memorization(){
     )
 }
 
-const addCard = async (front, back, image, showOnQuestion) => {
+const addCard = async (front, back, QImage, AImage) => {
     const query = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
 
     const revDate = new Date();
     revDate.setSeconds(revDate.getSeconds()+ 5);
-    const id = uuidv4();
+    let QImageId = null;
+    let AImageId = null;
 
-    if(image) {
-        storage.ref(`/${auth.currentUser.uid}/${id}`).put(image, {contentType: 'image/jpg'});
-        await query.add({front, back, image: id, showOnQuestion, state:0, reviewDate:revDate});
-    }else {
-        await query.add({front, back, showOnQuestion, state:0, reviewDate:revDate});
+    if(QImage) {
+        QImageId = uuidv4();
+        storage.ref(`/${auth.currentUser.uid}/${QImageId}`).put(QImage, {contentType: 'image/jpg'});
     }
+    if(AImage){
+        AImageId = uuidv4();
+        storage.ref(`/${auth.currentUser.uid}/${AImageId}`).put(AImage, {contentType: 'image/jpg'});
+    }
+
+    await query.add({front, back, QImageId, AImageId, state:0, reviewDate:revDate});
 };
 
 function AddCard(){
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
-    const [imageURL, setImageUrl] = useState('');
-    const [image, setImage] = useState(null);
-    const [showOnQuestion, setShowOnQuestion] = useState(false);
+
+    const [QImageURL, setQImageUrl] = useState('');
+    const [QImage, setQImage] = useState(null);
+
+    const [AImageURL, setAImageUrl] = useState('');
+    const [AImage, setAImage] = useState(null);
 
     const onAddCard = (e) => {
         e.preventDefault();
-        addCard(front, back, image, showOnQuestion);
+        addCard(front, back, QImage, AImage);
 
         setFront('');
         setBack('');
-        setImage(null);
-        setImageUrl('');
-        setShowOnQuestion(false);
+        setQImage(null);
+        setQImageUrl('');
+
+        setAImage(null);
+        setAImageUrl('');
     };
 
     return (
@@ -132,18 +142,24 @@ function AddCard(){
             <form onSubmit={onAddCard} style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
                 <label htmlFor="front"><b>Front</b></label>
                 <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} />
+
                 <label htmlFor="back"><b>Back</b></label>
                 <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} />
-                <label htmlFor="image"><b>Image</b></label>
+
+                <label htmlFor="image"><b>Question Image</b></label>
                 <input type="file" id="image" onChange={(e) => {
-                    setImage(e.target.files[0]);
-                    setImageUrl(URL.createObjectURL(e.target.files[0]));
+                    setQImage(e.target.files[0]);
+                    setQImageUrl(URL.createObjectURL(e.target.files[0]));
                 }}/>
-                <img src={imageURL} alt={"preview"}/>
-                <div onChange={(e) => e.target.value === "Question" ? setShowOnQuestion(true) : setShowOnQuestion(false)}>
-                    <input type="radio" value="Question" name="showOnQuestion" /> Show On Question
-                    <input type="radio" value="Answer" name="showOnQuestion" /> Show On Answer
-                </div>
+                <img src={QImageURL} alt={"question preview"}/>
+
+                <label htmlFor="image"><b>Answer Image</b></label>
+                <input type="file" id="image" onChange={(e) => {
+                    setAImage(e.target.files[0]);
+                    setAImageUrl(URL.createObjectURL(e.target.files[0]));
+                }}/>
+                <img src={AImageURL} alt={"answer preview"}/>
+
                 <button type="submit">Add</button>
             </form>
         </div>
@@ -201,7 +217,8 @@ function CardReview(props) {
     const card = props.card;
 
     const [show, setShow] = useState(false);
-    const [imgUrl, setImgUrl] = useState("");
+    const [QImgUrl, setQImgUrl] = useState("");
+    const [AImgUrl, setAImgUrl] = useState("");
 
     const changeState = useCallback(async (card, state) => {
         const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
@@ -223,9 +240,7 @@ function CardReview(props) {
             state = 0;
         const newReviewDate = new Date();
         newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[state]);
-        await path.doc(card.id).set({
-            front:card.front,
-            back: card.back,
+        await path.doc(card.id).update({
             reviewDate: newReviewDate,
             state: state
         });
@@ -252,29 +267,33 @@ function CardReview(props) {
         };
     }, [card, changeState, show]);
 
-    if (card.image) {
-        storage.ref(`/${auth.currentUser.uid}/${card.image}`).getDownloadURL().then((url) => setImgUrl(url));
+    if (card.QImageId) {
+        storage.ref(`/${auth.currentUser.uid}/${card.QImageId}`).getDownloadURL().then((url) => setQImgUrl(url));
     }
 
-    return(<>
-        <div>
-            {card.showOnQuestion && <img src={imgUrl} alt={"question"}/>}
-            <pre style={{textAlign:"center"}}>{card.front}</pre>
-            <hr/>
-            {show ? <pre style={{textAlign:"center"}}>{card.back}</pre> : <p/>}
-        </div>
+    if (card.AImageId) {
+        storage.ref(`/${auth.currentUser.uid}/${card.AImageId}`).getDownloadURL().then((url) => setAImgUrl(url));
+    }
+
+    return(
+    <>
+        {QImgUrl && <img src={QImgUrl} alt={"question"}/>}
+        <pre style={{textAlign:"center"}}>{card.front}</pre>
+        <hr/>
         {show ?
-            <div>
-                {imgUrl && !card.showOnQuestion && <img src={imgUrl} alt={"answer"}/>}
+            <>
+                {AImgUrl && <img src={AImgUrl} alt={"answer"}/>}
+                <pre style={{textAlign:"center"}}>{card.back}</pre>
                 <div className={"centerContents"}>
                     <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
                     <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
                 </div>
-            </div>
+            </>
             :
             <button onClick={() => setShow(true)}>Show</button>
         }
-    </>)
+    </>
+    )
 }
 
 const exportToJson = (object)=>{
@@ -335,9 +354,12 @@ function CardManager() {
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
-    const removeCard = async (cardId, cardImage) => {
-        if(cardImage) {
-            storage.ref(`/${auth.currentUser.uid}/${cardImage}`).delete();
+    const removeCard = async (cardId, QImageId, AImageId) => {
+        if(QImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
+        }
+        if(AImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
         }
         path.doc(cardId).delete();
     };
@@ -368,8 +390,9 @@ function CardManager() {
                     <td>{c.front}</td>
                     <td>{c.state}</td>
                     <td>{c.reviewDate.toDate().toLocaleString()}</td>
-                    <td><button onClick={() => removeCard(c.id, c.image)}>X</button></td>
-                </tr>)}
+                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>X</button></td>
+                </tr>
+            )}
             </tbody>
         </table>
         <button onClick={() => exportToJson(cards)}>
