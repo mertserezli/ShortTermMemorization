@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import './App.css';
 
 import alert from './done-for-you-612.mp3';
@@ -166,62 +166,20 @@ function AddCard(){
     )
 }
 
+let timeout;
+
 function Review() {
     const {showNotifications} = useContext(ShowNotifications);
 
-    const [curDate, setDate] = useState(new Date());
-    curDate.setMilliseconds(0);
-
-    if (!("Notification" in window)) {
-        console.log("This browser does not support desktop notification");
-    } else {
-        Notification.requestPermission();
-    }
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDate(new Date());
-            curDate.setMilliseconds(0);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [curDate]);
-
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
-
-    const haveReviews = cards && 0 < cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7).length;
-
-    useEffect(() => {
-        const audio = new Audio(alert);
-        const interval = setInterval(() => {
-            if (haveReviews && showNotifications) {
-                new Notification('Do Reviews');
-                audio.play()
-            }
-        }, 10 * 1000);
-        return () => clearInterval(interval);
-    }, [haveReviews, showNotifications]);
-
-    return(<>
-        {haveReviews ?
-            <div>
-                <CardReview card = {cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7)[0]}/>
-            </div>
-        :
-            <h2>No reviews left</h2>
-        }
-        </>)
-}
-
-function CardReview(props) {
-    const card = props.card;
+    const [curCard, setCurCard] = useState(null);
 
     const [show, setShow] = useState(false);
     const [QImgUrl, setQImgUrl] = useState("");
     const [AImgUrl, setAImgUrl] = useState("");
 
-    const changeState = useCallback(async (card, state) => {
-        const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
+    const changeState = async (card, state) => {
 
         const stateToTime = {
             0: 5,
@@ -244,56 +202,63 @@ function CardReview(props) {
             reviewDate: newReviewDate,
             state: state
         });
-    }, []);
 
-    useEffect(() => {
-        const keyPress = (event) => {
-            if(event.key === '1' && show){
-                changeState(card, card.state - 1)
-            }
-            else if(event.key === ' '){
-                if(show) {
-                    changeState(card, card.state + 1)
-                } else{
-                    setShow(true)
+        setCurCard(null);
+    };
+
+    function pickCard() {
+        clearTimeout(timeout);
+        if(cards) {
+            const toReview = cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7);
+            if (curCard == null && 0 < toReview.length) {
+                setShow(false);
+                setCurCard(toReview[0]);
+
+                setQImgUrl("");
+                setAImgUrl("");
+
+                if (toReview[0].QImageId) {
+                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].QImageId}`).getDownloadURL().then((url) => setQImgUrl(url));
+                }
+
+                if (toReview[0].AImageId) {
+                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].AImageId}`).getDownloadURL().then((url) => setAImgUrl(url));
                 }
             }
-        };
-
-        document.addEventListener("keydown", keyPress, false);
-
-        return () => {
-            document.removeEventListener("keydown", keyPress, false);
-        };
-    }, [card, changeState, show]);
-
-    if (card.QImageId) {
-        storage.ref(`/${auth.currentUser.uid}/${card.QImageId}`).getDownloadURL().then((url) => setQImgUrl(url));
+            else{
+                const closest = Math.min(...cards.map(t => t.reviewDate.toDate()));
+                timeout = setTimeout(() => pickCard(), closest - new Date().getTime() + 500);
+            }
+        }else{
+            timeout = setTimeout(() => pickCard(), 5000);
+        }
     }
 
-    if (card.AImageId) {
-        storage.ref(`/${auth.currentUser.uid}/${card.AImageId}`).getDownloadURL().then((url) => setAImgUrl(url));
-    }
+    pickCard();
 
-    return(
-    <>
-        {QImgUrl && <img src={QImgUrl} alt={"question"}/>}
-        <pre style={{textAlign:"center"}}>{card.front}</pre>
-        <hr/>
-        {show ?
+    return(<>
+        {curCard ?
             <>
-                {AImgUrl && <img src={AImgUrl} alt={"answer"}/>}
-                <pre style={{textAlign:"center"}}>{card.back}</pre>
-                <div className={"centerContents"}>
-                    <button onClick = {() => changeState(card, card.state - 1)}>Again</button>
-                    <button onClick = {() => changeState(card, card.state + 1)}>Good</button>
-                </div>
+                {QImgUrl && <img src={QImgUrl} alt={"question"}/>}
+                <pre style={{textAlign: "center"}}>{curCard.front}</pre>
+                <hr/>
+                {show ?
+                    <>
+                        {AImgUrl && <img src={AImgUrl} alt={"answer"}/>}
+                        <pre style={{textAlign: "center"}}>{curCard.back}</pre>
+                        <div className={"centerContents"}>
+                            <button onClick = {() => changeState(curCard, curCard.state - 1)}>Again</button>
+                            <button onClick = {() => changeState(curCard, curCard.state + 1)}>Good</button>
+                        </div>
+                    </>
+                    :
+                    <button onClick={() => setShow(true)}>Show</button>
+            }
             </>
             :
-            <button onClick={() => setShow(true)}>Show</button>
+            <h2>No reviews left</h2>
         }
-    </>
-    )
+        </>)
 }
 
 const exportToJson = (object)=>{
