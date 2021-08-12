@@ -1,15 +1,17 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import './App.css';
+import AuthProvider, {UserContext, auth} from "./AuthProvider"
+import {AddCardComponent} from "./AddCard"
+import {ShowNotifications} from "./NotificationContextProvider"
+import ReviewComponent from "./ReviewComponent"
+import CardManager from "./CardManager"
+import GraduatedCards from "./GraduatedCards"
 
 import alert from './done-for-you-612.mp3';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
-import 'firebase/auth';
 import 'firebase/storage';
-
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 firebase.initializeApp({
   apiKey: "AIzaSyDCyFHMeMgLltZbqS37Whh5vMlLM2UCllI",
@@ -21,17 +23,18 @@ firebase.initializeApp({
   appId: "1:440994357739:web:db860414b9b1b007e479ae",
   measurementId: "G-0KFM767G9X"
 });
-import { v4 as uuidv4 } from 'uuid';
-
-const auth = firebase.auth();
-const firestore = firebase.firestore();
-const storage = firebase.storage();
-
-const ShowNotifications = createContext(null);
 
 function App() {
+    return (
+        <AuthProvider>
+            <Application/>
+        </AuthProvider>
+    );
+}
+
+function Application() {
     const [showNotifications, setShowNotifications] = useState(true);
-    const [user] = useAuthState(auth);
+    const user = useContext(UserContext);
 
     return (
     <ShowNotifications.Provider value={{showNotifications, setShowNotifications}}>
@@ -48,16 +51,16 @@ function App() {
 
 function SignIn() {
 
-  const signInWithGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  };
+    const signInWithGoogle = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider);
+    };
 
-  return (
-      <div style={{textAlign:"center"}}>
+    return (
+        <div style={{textAlign:"center"}}>
         <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
-      </div>
-  )
+        </div>
+    )
 
 }
 
@@ -79,296 +82,19 @@ function Memorization(){
     return (
     <div className="grid-container">
         <div className="addCard">
-            <AddCard/>
+            <AddCardComponent/>
         </div>
         <div className="review">
-            <Review/>
+            <ReviewComponent/>
         </div>
         <div className="cardManager">
             <ToggleNotifications/>
             <SignOut/>
             <CardManager/>
-            <Graduated/>
+            <GraduatedCards/>
         </div>
     </div>
     )
-}
-
-const addCard = async (front, back, QImage, AImage) => {
-    const query = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
-
-    const revDate = new Date();
-    revDate.setSeconds(revDate.getSeconds()+ 5);
-    let QImageId = null;
-    let AImageId = null;
-
-    if(QImage) {
-        QImageId = uuidv4();
-        storage.ref(`/${auth.currentUser.uid}/${QImageId}`).put(QImage, {contentType: 'image/jpg'});
-    }
-    if(AImage){
-        AImageId = uuidv4();
-        storage.ref(`/${auth.currentUser.uid}/${AImageId}`).put(AImage, {contentType: 'image/jpg'});
-    }
-
-    await query.add({front, back, QImageId, AImageId, state:0, reviewDate:revDate});
-};
-
-function AddCard(){
-    const [front, setFront] = useState('');
-    const [back, setBack] = useState('');
-
-    const [QImageURL, setQImageUrl] = useState('');
-    const [QImage, setQImage] = useState(null);
-
-    const [AImageURL, setAImageUrl] = useState('');
-    const [AImage, setAImage] = useState(null);
-
-    const onAddCard = (e) => {
-        e.preventDefault();
-        addCard(front, back, QImage, AImage);
-
-        setFront('');
-        setBack('');
-        setQImage(null);
-        setQImageUrl('');
-
-        setAImage(null);
-        setAImageUrl('');
-    };
-
-    return (
-        <div className={"centerContents"}>
-            <form onSubmit={onAddCard} style={{grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%"}}>
-                <label htmlFor="front"><b>Front</b></label>
-                <textarea placeholder="Enter Front Side" name="front" id="front" value={front} onChange={(e) => setFront(e.target.value)} />
-
-                <label htmlFor="back"><b>Back</b></label>
-                <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} />
-
-                <label htmlFor="image"><b>Question Image</b></label>
-                <input type="file" id="image" onChange={(e) => {
-                    setQImage(e.target.files[0]);
-                    setQImageUrl(URL.createObjectURL(e.target.files[0]));
-                }}/>
-                <img src={QImageURL} alt={"question preview"}/>
-
-                <label htmlFor="image"><b>Answer Image</b></label>
-                <input type="file" id="image" onChange={(e) => {
-                    setAImage(e.target.files[0]);
-                    setAImageUrl(URL.createObjectURL(e.target.files[0]));
-                }}/>
-                <img src={AImageURL} alt={"answer preview"}/>
-
-                <button type="submit">Add</button>
-            </form>
-        </div>
-    )
-}
-
-let timeout;
-
-function Review() {
-    const {showNotifications} = useContext(ShowNotifications);
-
-    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
-    const [cards] = useCollectionData(path,{ idField: 'id' });
-    const [curCard, setCurCard] = useState(null);
-
-    const [show, setShow] = useState(false);
-    const [QImgUrl, setQImgUrl] = useState("");
-    const [AImgUrl, setAImgUrl] = useState("");
-
-    const changeState = async (card, state) => {
-
-        const stateToTime = {
-            0: 5,
-            1: 25,
-            2: 2*60,
-            3: 10*60,
-            4: 60*60,
-            5: 5*60*60,
-            6: 24*60*60,
-            7: 1,
-        };
-
-        setShow(false);
-
-        if (state < 0)
-            state = 0;
-        const newReviewDate = new Date();
-        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[state]);
-        await path.doc(card.id).update({
-            reviewDate: newReviewDate,
-            state: state
-        });
-
-        setCurCard(null);
-    };
-
-    function pickCard() {
-        clearTimeout(timeout);
-        if(cards) {
-            const toReview = cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7);
-            if (curCard == null && 0 < toReview.length) {
-                setShow(false);
-                setCurCard(toReview[0]);
-
-                setQImgUrl("");
-                setAImgUrl("");
-
-                if (toReview[0].QImageId) {
-                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].QImageId}`).getDownloadURL().then((url) => setQImgUrl(url));
-                }
-
-                if (toReview[0].AImageId) {
-                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].AImageId}`).getDownloadURL().then((url) => setAImgUrl(url));
-                }
-            }
-            else{
-                const closest = Math.min(...cards.map(t => t.reviewDate.toDate()));
-                timeout = setTimeout(() => pickCard(), closest - new Date().getTime() + 500);
-            }
-        }else{
-            timeout = setTimeout(() => pickCard(), 5000);
-        }
-    }
-
-    pickCard();
-
-    return(<>
-        {curCard ?
-            <>
-                {QImgUrl && <img src={QImgUrl} alt={"question"}/>}
-                <pre style={{textAlign: "center"}}>{curCard.front}</pre>
-                <hr/>
-                {show ?
-                    <>
-                        {AImgUrl && <img src={AImgUrl} alt={"answer"}/>}
-                        <pre style={{textAlign: "center"}}>{curCard.back}</pre>
-                        <div className={"centerContents"}>
-                            <button onClick = {() => changeState(curCard, curCard.state - 1)}>Again</button>
-                            <button onClick = {() => changeState(curCard, curCard.state + 1)}>Good</button>
-                        </div>
-                    </>
-                    :
-                    <button onClick={() => setShow(true)}>Show</button>
-            }
-            </>
-            :
-            <h2>No reviews left</h2>
-        }
-        </>)
-}
-
-const exportToJson = (object)=>{
-    let filename = "export.json";
-    let contentType = "application/json;charset=utf-8;";
-    object = object.map(card =>{ return {front:card.front, back:card.back}});
-    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
-        let blob = new Blob([decodeURIComponent(encodeURI(JSON.stringify(object)))], { type: contentType });
-        navigator.msSaveOrOpenBlob(blob, filename);
-    } else {
-        let a = document.createElement('a');
-        a.download = filename;
-        a.href = 'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-};
-
-function Graduated(){
-    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
-    const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
-
-    const removeCard = async (cardId, QImageId, AImageId) => {
-        if(QImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
-        }
-        if(AImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
-        }
-        path.doc(cardId).delete();
-    };
-
-    return(<div>
-        <h1>Graduated Cards</h1>
-        <table>
-            <thead>
-            <tr>
-                <th>Front</th>
-                <th>Back</th>
-                <th>Remove</th>
-            </tr>
-            </thead>
-            <tbody>
-            {cards && cards.map(c =>
-                <tr key={c.id}>
-                    <td>{c.front}</td>
-                    <td>{c.back}</td>
-                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>Remove Card</button></td>
-                </tr>)}
-            </tbody>
-        </table>
-        <button onClick={() => exportToJson(cards)}>
-            Export
-        </button>
-    </div>)
-}
-
-function CardManager() {
-    const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
-    const [cards] = useCollectionData(path,{ idField: 'id' });
-
-    const removeCard = async (cardId, QImageId, AImageId) => {
-        if(QImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
-        }
-        if(AImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
-        }
-        path.doc(cardId).delete();
-    };
-
-    const importJSON = e => {
-        const fileReader = new FileReader();
-        fileReader.readAsText(e.target.files[0], "UTF-8");
-        fileReader.onload = e => {
-            let cardsToImport = JSON.parse(e.target.result);
-            cardsToImport.forEach(c => addCard(c.front, c.back));
-        };
-    };
-
-    return(<div>
-        <h1>All Cards</h1>
-        <table>
-            <thead>
-            <tr>
-                <th>Front</th>
-                <th>State</th>
-                <th>Review Date</th>
-                <th>Remove</th>
-            </tr>
-            </thead>
-            <tbody>
-            {cards && cards.map(c =>
-                <tr key={c.id}>
-                    <td>{c.front}</td>
-                    <td>{c.state}</td>
-                    <td>{c.reviewDate.toDate().toLocaleString()}</td>
-                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>X</button></td>
-                </tr>
-            )}
-            </tbody>
-        </table>
-        <button onClick={() => exportToJson(cards)}>
-            Export
-        </button>
-        <label htmlFor="avatar">Import:</label>
-        <input type="file" id="avatar" name="import" accept=".json" onChange={importJSON}/>
-    </div>)
 }
 
 export default App;
