@@ -61,15 +61,15 @@ function AddCardComponent(){
                 <label htmlFor="back"><b>Back</b></label>
                 <textarea placeholder="Enter Back Side" name="back" id="back" value={back} onChange={(e) => setBack(e.target.value)} />
 
-                <label htmlFor="image"><b>Question Image</b></label>
-                <input type="file" id="image" onChange={(e) => {
+                <label htmlFor="imageQ"><b>Question Image</b></label>
+                <input type="file" id="imageQ" onChange={(e) => {
                     setQImage(e.target.files[0]);
                     setQImageUrl(URL.createObjectURL(e.target.files[0]));
                 }}/>
                 <img src={QImageURL} alt={"question preview"}/>
 
-                <label htmlFor="image"><b>Answer Image</b></label>
-                <input type="file" id="image" onChange={(e) => {
+                <label htmlFor="imageA"><b>Answer Image</b></label>
+                <input type="file" id="imageA" onChange={(e) => {
                     setAImage(e.target.files[0]);
                     setAImageUrl(URL.createObjectURL(e.target.files[0]));
                 }}/>
