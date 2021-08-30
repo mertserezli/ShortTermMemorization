@@ -16,14 +16,22 @@ export default function GraduatedCards(){
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path.where("state", "==", 7),{ idField: 'id' });
 
-    const removeCard = async (cardId, QImageId, AImageId) => {
-        if(QImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
+    const removeCard = async (card) => {
+        if(card.QImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.QImageId}`).delete();
         }
-        if(AImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
+        if(card.AImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.AImageId}`).delete();
         }
-        path.doc(cardId).delete();
+
+        if(card.QAudioId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.QImageId}`).delete();
+        }
+        if(card.AAudioId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.AImageId}`).delete();
+        }
+
+        path.doc(card.id).delete();
     };
 
     return(<div>
@@ -41,7 +49,7 @@ export default function GraduatedCards(){
                 <tr key={c.id}>
                     <td>{c.front}</td>
                     <td>{c.back}</td>
-                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>Remove Card</button></td>
+                    <td><button onClick={() => removeCard(c)}>Remove Card</button></td>
                 </tr>)}
             </tbody>
         </table>

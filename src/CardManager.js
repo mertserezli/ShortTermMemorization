@@ -17,14 +17,22 @@ export default function CardManager() {
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
 
-    const removeCard = async (cardId, QImageId, AImageId) => {
-        if(QImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${QImageId}`).delete();
+    const removeCard = async (card) => {
+        if(card.QImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.QImageId}`).delete();
         }
-        if(AImageId) {
-            storage.ref(`/${auth.currentUser.uid}/${AImageId}`).delete();
+        if(card.AImageId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.AImageId}`).delete();
         }
-        path.doc(cardId).delete();
+
+        if(card.QAudioId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.QAudioId}`).delete();
+        }
+        if(card.AAudioId) {
+            storage.ref(`/${auth.currentUser.uid}/${card.AAudioId}`).delete();
+        }
+
+        path.doc(card.id).delete();
     };
 
     const importJSON = e => {
@@ -53,7 +61,7 @@ export default function CardManager() {
                     <td>{c.front}</td>
                     <td>{c.state}</td>
                     <td>{c.reviewDate.toDate().toLocaleString()}</td>
-                    <td><button onClick={() => removeCard(c.id, c.QImageId, c.AImageId)}>X</button></td>
+                    <td><button onClick={() => removeCard(c)}>X</button></td>
                 </tr>
             )}
             </tbody>

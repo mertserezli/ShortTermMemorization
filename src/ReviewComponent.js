@@ -23,6 +23,8 @@ export default function ReviewComponent() {
     const [show, setShow] = useState(false);
     const [QImgUrl, setQImgUrl] = useState("");
     const [AImgUrl, setAImgUrl] = useState("");
+    const [QAudioUrl, setQAudioUrl] = useState("");
+    const [AAudioUrl, setAAudioUrl] = useState("");
 
     const changeState = async (card, state) => {
 
@@ -69,6 +71,17 @@ export default function ReviewComponent() {
                 if (toReview[0].AImageId) {
                     storage.ref(`/${auth.currentUser.uid}/${toReview[0].AImageId}`).getDownloadURL().then((url) => setAImgUrl(url));
                 }
+
+                setQAudioUrl("");
+                setAAudioUrl("");
+
+                if (toReview[0].QAudioId) {
+                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].QAudioId}`).getDownloadURL().then((url) => setQAudioUrl(url));
+                }
+
+                if (toReview[0].AAudioId) {
+                    storage.ref(`/${auth.currentUser.uid}/${toReview[0].AAudioId}`).getDownloadURL().then((url) => setAAudioUrl(url));
+                }
             }
             else{
                 const closest = Math.min(...cards.map(t => t.reviewDate.toDate()));
@@ -84,12 +97,25 @@ export default function ReviewComponent() {
     return(<>
         {curCard ?
             <>
-                {QImgUrl && <img src={QImgUrl} alt={"question"}/>}
+                {QImgUrl && <> <img src={QImgUrl} alt={"question"}/> <br/> </>}
+                {QAudioUrl &&
+                    <audio controls>
+                        <source src={QAudioUrl} type="audio/mp3"/>
+                        Your browser does not support the audio element.
+                    </audio>
+                }
+
                 <pre style={{textAlign: "center"}}>{curCard.front}</pre>
                 <hr/>
                 {show ?
                     <>
-                        {AImgUrl && <img src={AImgUrl} alt={"answer"}/>}
+                        {AImgUrl && <> <img src={AImgUrl} alt={"answer"}/> <br/> </>}
+                        {AAudioUrl &&
+                            <audio controls>
+                                <source src={AAudioUrl} type="audio/mp3"/>
+                                Your browser does not support the audio element.
+                            </audio>
+                        }
                         <pre style={{textAlign: "center"}}>{curCard.back}</pre>
                         <div className={"centerContents"}>
                             <button onClick = {() => changeState(curCard, curCard.state - 1)}>Again</button>
