@@ -26,7 +26,7 @@ export default function ReviewComponent() {
     const [QAudioUrl, setQAudioUrl] = useState("");
     const [AAudioUrl, setAAudioUrl] = useState("");
 
-    const changeState = async (card, state) => {
+    const changeState = async (card, feedback) => {
 
         const stateToTime = {
             0: 5,
@@ -39,15 +39,21 @@ export default function ReviewComponent() {
             7: 1,
         };
 
+        if(feedback)
+            card.state += 1;
+        else {
+            card.state -= 1;
+            if (card.state < 0)
+                card.state = 0;
+        }
+
         setShow(false);
 
-        if (state < 0)
-            state = 0;
         const newReviewDate = new Date();
-        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[state]);
-        await path.doc(card.id).update({
+        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[card.state]);
+        path.doc(card.id).update({
             reviewDate: newReviewDate,
-            state: state
+            state: card.state
         });
 
         setCurCard(null);
@@ -118,8 +124,8 @@ export default function ReviewComponent() {
                         }
                         <pre style={{textAlign: "center"}}>{curCard.back}</pre>
                         <div className={"centerContents"}>
-                            <button onClick = {() => changeState(curCard, curCard.state - 1)}>Again</button>
-                            <button onClick = {() => changeState(curCard, curCard.state + 1)}>Good</button>
+                            <button onClick = {() => changeState(curCard, false)}>Again</button>
+                            <button onClick = {() => changeState(curCard, true)}>Good</button>
                         </div>
                     </>
                     :
