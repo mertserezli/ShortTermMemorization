@@ -4,6 +4,8 @@ import {ShowNotifications} from "./NotificationContextProvider"
 import {auth} from "./AuthProvider";
 import {useCollectionData} from "react-firebase-hooks/firestore";
 
+import Loading from "./LoadingComponent";
+
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/storage';
@@ -19,10 +21,14 @@ export default function ReviewComponent() {
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
     const [cards] = useCollectionData(path,{ idField: 'id' });
     const [curCard, setCurCard] = useState(null);
-
     const [show, setShow] = useState(false);
+
     const [QImgUrl, setQImgUrl] = useState("");
+    const [QImgLoaded, setQImgLoaded] = useState(false);
+
     const [AImgUrl, setAImgUrl] = useState("");
+    const [AImgLoaded, setAImgLoaded] = useState(false);
+
     const [QAudioUrl, setQAudioUrl] = useState("");
     const [AAudioUrl, setAAudioUrl] = useState("");
 
@@ -48,6 +54,8 @@ export default function ReviewComponent() {
         }
 
         setShow(false);
+        setQImgLoaded(false);
+        setAImgLoaded(false);
 
         const newReviewDate = new Date();
         newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[card.state]);
@@ -103,7 +111,7 @@ export default function ReviewComponent() {
     return(<>
         {curCard ?
             <>
-                {QImgUrl && <> <img src={QImgUrl} alt={"question"}/> <br/> </>}
+                {QImgUrl && <> <Loading show={!QImgLoaded}/> <img style={{display: QImgLoaded ? "block" : "none"}} src={QImgUrl} alt={"question"} onLoad={()=>setQImgLoaded(true)}/> <br/> </>}
                 {QAudioUrl &&
                     <audio controls>
                         <source src={QAudioUrl} type="audio/mp3"/>
@@ -115,7 +123,7 @@ export default function ReviewComponent() {
                 <hr/>
                 {show ?
                     <>
-                        {AImgUrl && <> <img src={AImgUrl} alt={"answer"}/> <br/> </>}
+                        {AImgUrl && <> <Loading show={!AImgLoaded}/> <img style={{display: AImgLoaded ? "block" : "none"}} src={AImgUrl} alt={"answer"} onLoad={()=>setAImgLoaded(true)}/> <br/> </>}
                         {AAudioUrl &&
                             <audio controls>
                                 <source src={AAudioUrl} type="audio/mp3"/>
@@ -123,7 +131,7 @@ export default function ReviewComponent() {
                             </audio>
                         }
                         <pre style={{textAlign: "center"}}>{curCard.back}</pre>
-                        <div className={"centerContents"}>
+                        <div>
                             <button onClick = {() => changeState(curCard, false)}>Again</button>
                             <button onClick = {() => changeState(curCard, true)}>Good</button>
                         </div>
