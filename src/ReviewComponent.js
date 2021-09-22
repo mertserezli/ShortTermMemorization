@@ -45,26 +45,29 @@ export default function ReviewComponent() {
             7: 1,
         };
 
+        let newState = card.state;
+        card.state = 7;
+
         if(feedback)
-            card.state += 1;
+            newState += 1;
         else {
-            card.state -= 1;
-            if (card.state < 0)
-                card.state = 0;
+            newState -= 1;
+            if (newState < 0)
+                newState = 0;
         }
 
         setShow(false);
         setQImgLoaded(false);
         setAImgLoaded(false);
+        setCurCard(null);
 
         const newReviewDate = new Date();
-        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[card.state]);
+        newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[newState]);
         path.doc(card.id).update({
             reviewDate: newReviewDate,
-            state: card.state
+            state: newState
         });
 
-        setCurCard(null);
     };
 
     function pickCard() {
