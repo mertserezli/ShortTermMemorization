@@ -5,6 +5,8 @@ import {auth} from "./AuthProvider";
 import {useCollectionData} from "react-firebase-hooks/firestore";
 
 import Loading from "./LoadingComponent";
+import CountdownTimer from "./CountdownTimer"
+import {FirebaseDateToDate} from "./Utils"
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
@@ -14,6 +16,10 @@ const firestore = firebase.firestore();
 const storage = firebase.storage();
 
 let timeout;
+
+function getEarliestCard(cards){
+    return Math.min(...cards.map(c => FirebaseDateToDate(c.reviewDate)))
+}
 
 export default function ReviewComponent() {
     const {showNotifications} = useContext(ShowNotifications);
@@ -63,6 +69,8 @@ export default function ReviewComponent() {
 
         const newReviewDate = new Date();
         newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[newState]);
+        card.reviewDate = newReviewDate;
+        
         path.doc(card.id).update({
             reviewDate: newReviewDate,
             state: newState
@@ -72,8 +80,8 @@ export default function ReviewComponent() {
 
     function pickCard() {
         clearTimeout(timeout);
-        if(cards) {
-            const toReview = cards.filter(c => c.reviewDate.toDate() < new Date() && c.state < 7);
+        if(cards && 0<cards.length) {
+            const toReview = cards.filter(c => FirebaseDateToDate(c.reviewDate) < new Date() && c.state < 7);
             if (curCard == null && 0 < toReview.length) {
                 setShow(false);
                 setCurCard(toReview[0]);
@@ -101,7 +109,7 @@ export default function ReviewComponent() {
                 }
             }
             else{
-                const closest = Math.min(...cards.map(t => t.reviewDate.toDate()));
+                const closest = getEarliestCard(cards);
                 timeout = setTimeout(() => pickCard(), closest - new Date().getTime() + 500);
             }
         }else{
@@ -144,7 +152,9 @@ export default function ReviewComponent() {
                 }
             </>
             :
-            <h2>No reviews left</h2>
+            <>
+                {!cards || cards.length === 0 ? <h2>You have no cards. Add some</h2> : <CountdownTimer duration={(getEarliestCard(cards)- new Date().getTime())/1000}/>}
+            </>
         }
     </>)
 }
