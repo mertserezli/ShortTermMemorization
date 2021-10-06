@@ -8,8 +8,6 @@ import CardManager from "./CardManager"
 import GraduatedCards from "./GraduatedCards"
 import {initFirebase} from "./Utils";
 
-import alert from './done-for-you-612.mp3';
-
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/storage';

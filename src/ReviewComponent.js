@@ -22,6 +22,7 @@ function getEarliestCard(cards){
 }
 
 export default function ReviewComponent() {
+    // eslint-disable-next-line no-unused-vars
     const {showNotifications} = useContext(ShowNotifications);
 
     const path = firestore.collection('allCards').doc(auth.currentUser.uid).collection('cards');
