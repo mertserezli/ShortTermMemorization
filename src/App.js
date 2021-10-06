@@ -6,6 +6,7 @@ import {ShowNotifications} from "./NotificationContextProvider"
 import ReviewComponent from "./ReviewComponent"
 import CardManager from "./CardManager"
 import GraduatedCards from "./GraduatedCards"
+import {initFirebase} from "./Utils";
 
 import alert from './done-for-you-612.mp3';
 
@@ -13,16 +14,7 @@ import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/storage';
 
-firebase.initializeApp({
-  apiKey: "AIzaSyDCyFHMeMgLltZbqS37Whh5vMlLM2UCllI",
-  authDomain: "shorttermmemorization.firebaseapp.com",
-  databaseURL: "https://shorttermmemorization.firebaseio.com",
-  projectId: "shorttermmemorization",
-  storageBucket: "shorttermmemorization.appspot.com",
-  messagingSenderId: "440994357739",
-  appId: "1:440994357739:web:db860414b9b1b007e479ae",
-  measurementId: "G-0KFM767G9X"
-});
+initFirebase();
 
 function App() {
     return (

@@ -1,3 +1,20 @@
+import firebase from 'firebase/app';
+
+function initFirebase(){
+    if (!firebase.apps.length) {
+        firebase.initializeApp({
+            apiKey: "AIzaSyDCyFHMeMgLltZbqS37Whh5vMlLM2UCllI",
+            authDomain: "shorttermmemorization.firebaseapp.com",
+            databaseURL: "https://shorttermmemorization.firebaseio.com",
+            projectId: "shorttermmemorization",
+            storageBucket: "shorttermmemorization.appspot.com",
+            messagingSenderId: "440994357739",
+            appId: "1:440994357739:web:db860414b9b1b007e479ae",
+            measurementId: "G-0KFM767G9X"
+        });
+    }
+}
+
 const exportToJson = (object)=>{
     let filename = "export.json";
     let contentType = "application/json;charset=utf-8;";
@@ -24,4 +41,4 @@ const FirebaseDateToDate = (d)=>{
     }
 };
 
-export {exportToJson, FirebaseDateToDate}
+export {exportToJson, FirebaseDateToDate, initFirebase}
