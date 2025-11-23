@@ -2,13 +2,13 @@ import React, { useState, useContext, useEffect } from 'react';
 import { ShowNotifications } from "./NotificationContextProvider";
 
 import { auth } from "./AuthProvider";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import {useCollection} from "react-firebase-hooks/firestore";
 
 import Loading from "./LoadingComponent";
 import CountdownTimer from "./CountdownTimer";
 import { FirebaseDateToDate } from "./Utils";
 
-import { getFirestore, collection, doc } from "firebase/firestore";
+import { getFirestore, collection, doc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
 const firestore = getFirestore();
@@ -23,9 +23,9 @@ function getEarliestCard(cards) {
 export default function ReviewComponent() {
     const { showNotifications } = useContext(ShowNotifications);
 
-    const path = collection(doc(collection(firestore, "allCards"), auth.currentUser.uid), "cards");
+    const path = collection(firestore, "allCards", auth.currentUser.uid, "cards");
+    const [cardsCollection] = useCollection(path);
 
-    const [cards] = useCollectionData(path, { idField: "id" });
     const [curCard, setCurCard] = useState(null);
     const [show, setShow] = useState(false);
 
@@ -37,6 +37,13 @@ export default function ReviewComponent() {
 
     const [QAudioUrl, setQAudioUrl] = useState("");
     const [AAudioUrl, setAAudioUrl] = useState("");
+
+    let cards = cardsCollection ? cardsCollection.docs.map((card) => {
+        let id = card.id;
+        card = card.data();
+        card.id = id;
+        return card
+    }) : []
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
@@ -69,7 +76,7 @@ export default function ReviewComponent() {
         newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[newState]);
         card.reviewDate = newReviewDate;
 
-        await doc(path, card.id).update({
+        await updateDoc(doc(path, card.id), {
             reviewDate: newReviewDate,
             state: newState,
         });
