@@ -20,6 +20,7 @@
     "react-scripts": "4.0.0",
     "react-swipeable": "^7.0.2",
     "react-swipeable-views-v18": "^1.1.27",
+    "typescript": "^5.9.3",
     "uuid": "^8.3.2",
     "web-vitals": "^0.2.4"
   },
