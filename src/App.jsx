@@ -11,7 +11,7 @@ import GraduatedCards from "./GraduatedCards";
 import ForgotPassword from "./ForgotPassword";
 
 import { useAuthState } from "react-firebase-hooks/auth";
-import { SwipeableViews } from 'react-swipeable-views-v18';
+import { useSwipeable } from "react-swipeable";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -75,6 +75,12 @@ function Memorization() {
     setTabIndex(newValue);
   };
 
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setTabIndex((prev) => Math.min(prev + 1, 2)),
+    onSwipedRight: () => setTabIndex((prev) => Math.max(prev - 1, 0)),
+    trackMouse: true // allows mouse drag on desktop
+  });
+
   return (
     <>
       <HeaderBar showSignOut={true} />
@@ -99,19 +105,25 @@ function Memorization() {
             />
           </Tabs>
 
-          <SwipeableViews axis="x" index={tabIndex} onChangeIndex={setTabIndex}>
-            <Box sx={{ p: 2 }}>
-              <AddCardComponent />
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <ReviewComponent />
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <ToggleNotifications />
-              <CardManager />
-              <GraduatedCards />
-            </Box>
-          </SwipeableViews>
+          <div {...handlers}>
+            {tabIndex === 0 && (
+              <Box sx={{ p: 2 }}>
+                <AddCardComponent />
+              </Box>
+            )}
+            {tabIndex === 1 && (
+              <Box sx={{ p: 2 }}>
+                <ReviewComponent />
+              </Box>
+            )}
+            {tabIndex === 2 && (
+              <Box sx={{ p: 2 }}>
+                <ToggleNotifications />
+                <CardManager />
+                <GraduatedCards />
+              </Box>
+            )}
+          </div>
         </>
       ) : (
         <Grid container spacing={2} sx={{ px: 2, pb: 2 }} alignItems="stretch" >
