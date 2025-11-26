@@ -1,5 +1,5 @@
 # Short Term Memorization App
-https://quizzical-jang-46a3c2.netlify.app/
+https://shorttermmemorization.web.app/
 
 Short term memorization project aims to easily memorize things for short term as fast as possible.
 
