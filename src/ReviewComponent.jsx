@@ -1,15 +1,14 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, {useState, useContext, useEffect, useRef} from 'react';
 import { ShowNotifications } from "./NotificationContextProvider";
 
-import { auth } from "./Firebase";
+import { auth, db, storage } from "./Firebase";
 import { useCollection } from "react-firebase-hooks/firestore";
 
 import Loading from "./LoadingComponent";
-import CountdownTimer from "./CountdownTimer";
-import { FirebaseDateToDate } from "./Utils";
+import CountdownCircle from "./CountdownCircle";
 
-import { getFirestore, collection, doc, updateDoc } from "firebase/firestore";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { collection, doc, updateDoc } from "firebase/firestore";
+import { ref, getDownloadURL } from "firebase/storage";
 
 import {
     Box,
@@ -20,20 +19,15 @@ import {
 } from '@mui/material';
 import {useAuthState} from "react-firebase-hooks/auth";
 
-const firestore = getFirestore();
-const storage = getStorage();
-
-let timeout;
-
-function getEarliestCard(cards) {
-    return Math.min(...cards.map(c => FirebaseDateToDate(c.reviewDate)));
+function getEarliestReviewDate(cards) {
+    return Math.min(...cards.map(c => c.reviewDate));
 }
 
 export default function ReviewComponent() {
     const { showNotifications } = useContext(ShowNotifications);
     const [user, ] = useAuthState(auth);
 
-    const path = collection(firestore, "allCards", user.uid, "cards");
+    const path = collection(db, "allCards", user.uid, "cards");
     const [cardsCollection] = useCollection(path);
 
     const [curCard, setCurCard] = useState(null);
@@ -48,13 +42,13 @@ export default function ReviewComponent() {
     const [QAudioUrl, setQAudioUrl] = useState("");
     const [AAudioUrl, setAAudioUrl] = useState("");
 
-    let cards = cardsCollection
-      ? cardsCollection.docs.map((card) => {
-          let id = card.id;
-          let data = card.data();
-          return { ...data, id };
-      })
-      : [];
+    const timeoutRef = useRef(null);
+
+    const cards = cardsCollection?.docs.map(card => ({
+        ...card.data(),
+        id: card.id,
+        reviewDate: card.data().reviewDate.toDate(),
+    })) ?? [];
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
@@ -69,7 +63,6 @@ export default function ReviewComponent() {
         };
 
         let newState = card.state;
-        card.state = 7;
 
         if (feedback) {
             newState += 1;
@@ -85,7 +78,6 @@ export default function ReviewComponent() {
 
         const newReviewDate = new Date();
         newReviewDate.setSeconds(newReviewDate.getSeconds() + stateToTime[newState]);
-        card.reviewDate = newReviewDate;
 
         await updateDoc(doc(path, card.id), {
             reviewDate: newReviewDate,
@@ -94,10 +86,10 @@ export default function ReviewComponent() {
     };
 
     function pickCard() {
-        clearTimeout(timeout);
+        clearTimeout(timeoutRef.current);
         if (cards && cards.length > 0) {
             const toReview = cards.filter(
-              c => FirebaseDateToDate(c.reviewDate) < new Date() && c.state < 7
+              c => c.reviewDate < new Date() && c.state < 7
             );
             if (curCard == null && toReview.length > 0) {
                 setShow(false);
@@ -129,18 +121,17 @@ export default function ReviewComponent() {
                       .then(url => setAAudioUrl(url));
                 }
             } else {
-                const closest = getEarliestCard(cards);
-                timeout = setTimeout(() => pickCard(), closest - new Date().getTime() + 500);
+                timeoutRef.current = setTimeout(() => pickCard(), getEarliestReviewDate(cards) - new Date().getTime() + 500);
             }
         } else {
-            timeout = setTimeout(() => pickCard(), 5000);
+            timeoutRef.current = setTimeout(() => pickCard(), 5000);
         }
     }
 
     useEffect(() => {
         pickCard();
-        return () => clearTimeout(timeout);
-    }, [cards, curCard]);
+        return () => clearTimeout(timeoutRef.current);
+    }, [cardsCollection]);
 
     return (
       <Box>
@@ -222,8 +213,8 @@ export default function ReviewComponent() {
                 {!cards || cards.length === 0 ? (
                   <Typography variant="h6">You have no cards. Add some</Typography>
                 ) : (
-                  <CountdownTimer
-                    duration={(getEarliestCard(cards) - new Date().getTime()) / 1000}
+                  <CountdownCircle
+                    duration={(getEarliestReviewDate(cards) - new Date().getTime()) / 1000}
                   />
                 )}
             </Box>

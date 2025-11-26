@@ -16,12 +16,4 @@ const exportToJson = (object)=>{
     }
 };
 
-const FirebaseDateToDate = (d)=>{
-    try {
-        return d.toDate()
-    }catch (e) {
-        return d
-    }
-};
-
-export {exportToJson, FirebaseDateToDate}
+export {exportToJson,}
