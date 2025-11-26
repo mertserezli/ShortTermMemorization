@@ -11,7 +11,7 @@ import GraduatedCards from "./GraduatedCards";
 import ForgotPassword from "./ForgotPassword";
 
 import { useAuthState } from "react-firebase-hooks/auth";
-import SwipeableViews from 'react-swipeable-views-react-18-fix';
+import { SwipeableViews } from 'react-swipeable-views-v18';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -75,7 +75,6 @@ function Memorization() {
     setTabIndex(newValue);
   };
 
-
   return (
     <>
       <HeaderBar showSignOut={true} />
@@ -100,7 +99,7 @@ function Memorization() {
             />
           </Tabs>
 
-          <SwipeableViews index={tabIndex} onChangeIndex={setTabIndex}>
+          <SwipeableViews axis="x" index={tabIndex} onChangeIndex={setTabIndex}>
             <Box sx={{ p: 2 }}>
               <AddCardComponent />
             </Box>
