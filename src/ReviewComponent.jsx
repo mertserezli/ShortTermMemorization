@@ -1,8 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { ShowNotifications } from "./NotificationContextProvider";
 
-import { auth } from "./AuthProvider";
-import {useCollection} from "react-firebase-hooks/firestore";
+import { auth } from "./Firebase";
+import { useCollection } from "react-firebase-hooks/firestore";
 
 import Loading from "./LoadingComponent";
 import CountdownTimer from "./CountdownTimer";
@@ -10,6 +10,15 @@ import { FirebaseDateToDate } from "./Utils";
 
 import { getFirestore, collection, doc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
+
+import {
+    Box,
+    Typography,
+    Button,
+    Divider,
+    Paper
+} from '@mui/material';
+import {useAuthState} from "react-firebase-hooks/auth";
 
 const firestore = getFirestore();
 const storage = getStorage();
@@ -22,8 +31,9 @@ function getEarliestCard(cards) {
 
 export default function ReviewComponent() {
     const { showNotifications } = useContext(ShowNotifications);
+    const [user, ] = useAuthState(auth);
 
-    const path = collection(firestore, "allCards", auth.currentUser.uid, "cards");
+    const path = collection(firestore, "allCards", user.uid, "cards");
     const [cardsCollection] = useCollection(path);
 
     const [curCard, setCurCard] = useState(null);
@@ -38,12 +48,13 @@ export default function ReviewComponent() {
     const [QAudioUrl, setQAudioUrl] = useState("");
     const [AAudioUrl, setAAudioUrl] = useState("");
 
-    let cards = cardsCollection ? cardsCollection.docs.map((card) => {
-        let id = card.id;
-        card = card.data();
-        card.id = id;
-        return card
-    }) : []
+    let cards = cardsCollection
+      ? cardsCollection.docs.map((card) => {
+          let id = card.id;
+          let data = card.data();
+          return { ...data, id };
+      })
+      : [];
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
@@ -96,12 +107,12 @@ export default function ReviewComponent() {
                 setAImgUrl("");
 
                 if (toReview[0].QImageId) {
-                    getDownloadURL(ref(storage, `/${auth.currentUser.uid}/${toReview[0].QImageId}`))
+                    getDownloadURL(ref(storage, `/${user.uid}/${toReview[0].QImageId}`))
                       .then(url => setQImgUrl(url));
                 }
 
                 if (toReview[0].AImageId) {
-                    getDownloadURL(ref(storage, `/${auth.currentUser.uid}/${toReview[0].AImageId}`))
+                    getDownloadURL(ref(storage, `/${user.uid}/${toReview[0].AImageId}`))
                       .then(url => setAImgUrl(url));
                 }
 
@@ -109,12 +120,12 @@ export default function ReviewComponent() {
                 setAAudioUrl("");
 
                 if (toReview[0].QAudioId) {
-                    getDownloadURL(ref(storage, `/${auth.currentUser.uid}/${toReview[0].QAudioId}`))
+                    getDownloadURL(ref(storage, `/${user.uid}/${toReview[0].QAudioId}`))
                       .then(url => setQAudioUrl(url));
                 }
 
                 if (toReview[0].AAudioId) {
-                    getDownloadURL(ref(storage, `/${auth.currentUser.uid}/${toReview[0].AAudioId}`))
+                    getDownloadURL(ref(storage, `/${user.uid}/${toReview[0].AAudioId}`))
                       .then(url => setAAudioUrl(url));
                 }
             } else {
@@ -132,71 +143,91 @@ export default function ReviewComponent() {
     }, [cards, curCard]);
 
     return (
-      <>
+      <Box>
           {curCard ? (
-            <>
+            <Paper sx={{ p: 2, mb: 2 }}>
                 {QImgUrl && (
                   <>
                       <Loading show={!QImgLoaded} />
-                      <img
-                        style={{ display: QImgLoaded ? "block" : "none" }}
-                        src={QImgUrl}
-                        alt="question"
-                        onLoad={() => setQImgLoaded(true)}
-                      />
-                      <br />
+                      <Box sx={{ textAlign: "center" }}>
+                          <img
+                            style={{ display: QImgLoaded ? "block" : "none", maxWidth: "100%" }}
+                            src={QImgUrl}
+                            alt="question"
+                            onLoad={() => setQImgLoaded(true)}
+                          />
+                      </Box>
                   </>
                 )}
                 {QAudioUrl && (
-                  <audio controls>
-                      <source src={QAudioUrl} type="audio/mp3" />
-                      Your browser does not support the audio element.
-                  </audio>
+                  <Box sx={{ textAlign: "center", mt: 1 }}>
+                      <audio controls>
+                          <source src={QAudioUrl} type="audio/mp3" />
+                          Your browser does not support the audio element.
+                      </audio>
+                  </Box>
                 )}
 
-                <pre style={{ textAlign: "center" }}>{curCard.front}</pre>
-                <hr />
+                <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                    {curCard.front}
+                </Typography>
+
+                <Divider sx={{ my: 2 }} />
+
                 {show ? (
                   <>
                       {AImgUrl && (
                         <>
                             <Loading show={!AImgLoaded} />
-                            <img
-                              style={{ display: AImgLoaded ? "block" : "none" }}
-                              src={AImgUrl}
-                              alt="answer"
-                              onLoad={() => setAImgLoaded(true)}
-                            />
-                            <br />
+                            <Box sx={{ textAlign: "center" }}>
+                                <img
+                                  style={{ display: AImgLoaded ? "block" : "none", maxWidth: "100%" }}
+                                  src={AImgUrl}
+                                  alt="answer"
+                                  onLoad={() => setAImgLoaded(true)}
+                                />
+                            </Box>
                         </>
                       )}
                       {AAudioUrl && (
-                        <audio controls>
-                            <source src={AAudioUrl} type="audio/mp3" />
-                            Your browser does not support the audio element.
-                        </audio>
+                        <Box sx={{ textAlign: "center", mt: 1 }}>
+                            <audio controls>
+                                <source src={AAudioUrl} type="audio/mp3" />
+                                Your browser does not support the audio element.
+                            </audio>
+                        </Box>
                       )}
-                      <pre style={{ textAlign: "center" }}>{curCard.back}</pre>
-                      <div>
-                          <button onClick={() => changeState(curCard, false)}>Again</button>
-                          <button onClick={() => changeState(curCard, true)}>Good</button>
-                      </div>
+                      <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                          {curCard.back}
+                      </Typography>
+                      <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
+                          <Button variant="contained" color="error" onClick={() => changeState(curCard, false)}>
+                              Again
+                          </Button>
+                          <Button variant="contained" color="success" onClick={() => changeState(curCard, true)}>
+                              Good
+                          </Button>
+                      </Box>
                   </>
                 ) : (
-                  <button onClick={() => setShow(true)}>Show</button>
+                  <Box sx={{ textAlign: "center", mt: 2 }}>
+                      <Button variant="contained" onClick={() => setShow(true)}>
+                          Show
+                      </Button>
+                  </Box>
                 )}
-            </>
+            </Paper>
           ) : (
-            <>
+            <Box sx={{ textAlign: "center", mt: 4 }}>
                 {!cards || cards.length === 0 ? (
-                  <h2>You have no cards. Add some</h2>
+                  <Typography variant="h6">You have no cards. Add some</Typography>
                 ) : (
                   <CountdownTimer
                     duration={(getEarliestCard(cards) - new Date().getTime()) / 1000}
                   />
                 )}
-            </>
+            </Box>
           )}
-      </>
+      </Box>
     );
 }

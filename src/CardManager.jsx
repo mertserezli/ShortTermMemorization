@@ -1,33 +1,46 @@
 import React from 'react';
 
 import { exportToJson } from "./Utils";
-import { auth } from "./AuthProvider";
+import { auth } from "./Firebase";
 import {useCollection} from "react-firebase-hooks/firestore";
 import { addCard } from "./AddCard";
 
 import { getFirestore, collection, doc, deleteDoc } from "firebase/firestore";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 
+import {
+    Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, Paper, Button, Typography, Box
+} from '@mui/material';
+import {useAuthState} from "react-firebase-hooks/auth";
+
 const firestore = getFirestore();
 const storage = getStorage();
 
 export default function CardManager() {
-    const path = collection(firestore, "allCards", auth.currentUser.uid, "cards");
+    const [user, , ] = useAuthState(auth);
+    const path = collection(firestore, "allCards", user.uid, "cards");
+    const [cardsCollection] = useCollection(path);
 
-    const [cards] = useCollection(path);
+    let cards = cardsCollection ? cardsCollection.docs.map((card) => {
+        let id = card.id;
+        card = card.data();
+        card.id = id;
+        return card
+    }) : []
 
     const removeCard = async (card) => {
         if (card.QImageId) {
-            await deleteObject(ref(storage, `/${auth.currentUser.uid}/${card.QImageId}`));
+            await deleteObject(ref(storage, `/${user.uid}/${card.QImageId}`));
         }
         if (card.AImageId) {
-            await deleteObject(ref(storage, `/${auth.currentUser.uid}/${card.AImageId}`));
+            await deleteObject(ref(storage, `/${user.uid}/${card.AImageId}`));
         }
         if (card.QAudioId) {
-            await deleteObject(ref(storage, `/${auth.currentUser.uid}/${card.QAudioId}`));
+            await deleteObject(ref(storage, `/${user.uid}/${card.QAudioId}`));
         }
         if (card.AAudioId) {
-            await deleteObject(ref(storage, `/${auth.currentUser.uid}/${card.AAudioId}`));
+            await deleteObject(ref(storage, `/${user.uid}/${card.AAudioId}`));
         }
         await deleteDoc(doc(path, card.id));
     };
@@ -42,39 +55,67 @@ export default function CardManager() {
     };
 
     return (
-      <div>
-          <h1>All Cards</h1>
-          <table>
-              <thead>
-              <tr>
-                  <th>Front</th>
-                  <th>State</th>
-                  <th>Review Date</th>
-                  <th>Remove</th>
-              </tr>
-              </thead>
-              <tbody>
-              {cards && cards.docs.map(c =>
-                <tr key={c.id}>
-                    <td>{c.data().front}</td>
-                    <td>{c.data().state}</td>
-                    <td>{c.data().reviewDate.toDate().toLocaleString()}</td>
-                    <td><button onClick={() => removeCard(c)}>X</button></td>
-                </tr>
-              )}
-              </tbody>
-          </table>
-          <button onClick={() => exportToJson(cards)}>
-              Export
-          </button>
-          <label htmlFor="avatar">Import:</label>
-          <input
-            type="file"
-            id="avatar"
-            name="import"
-            accept=".json"
-            onChange={importJSON}
-          />
-      </div>
+      <Box>
+          <Typography variant="h4" gutterBottom>
+              All Cards
+          </Typography>
+
+          <TableContainer component={Paper}>
+              <Table>
+                  <TableHead>
+                      <TableRow>
+                          <TableCell><b>Front</b></TableCell>
+                          <TableCell><b>State</b></TableCell>
+                          <TableCell><b>Review Date</b></TableCell>
+                          <TableCell><b>Remove</b></TableCell>
+                      </TableRow>
+                  </TableHead>
+                  <TableBody>
+                      {cards && cards.map(c => (
+                        <TableRow key={c.id}>
+                            <TableCell>{c.front}</TableCell>
+                            <TableCell>{c.state}</TableCell>
+                            <TableCell>{c.reviewDate.toDate().toLocaleString()}</TableCell>
+                            <TableCell>
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  size="small"
+                                  onClick={() => removeCard(c)}
+                                >
+                                    Remove
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
+          </TableContainer>
+
+          <Box mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mr: 2 }}
+                onClick={() => exportToJson(cards)}
+              >
+                  Export
+              </Button>
+
+              <label htmlFor="avatar">
+                  <Typography variant="body1" component="span" sx={{ mr: 1 }}>
+                      Import:
+                  </Typography>
+              </label>
+              <input
+                type="file"
+                id="avatar"
+                name="import"
+                accept=".json"
+                onChange={importJSON}
+              />
+          </Box>
+      </Box>
+
     );
 }

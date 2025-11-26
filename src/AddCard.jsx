@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { auth } from "./AuthProvider";
+import { auth, storage } from "./Firebase";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -9,16 +9,24 @@ import {
     addDoc
 } from "firebase/firestore";
 import {
-    getStorage,
     ref,
     uploadBytes
 } from "firebase/storage";
+import { useAuthState } from "react-firebase-hooks/auth";
+
+import {
+    Box,
+    Paper,
+    TextField,
+    Button,
+    Typography,
+    Stack
+} from '@mui/material';
 
 const firestore = getFirestore();
-const storage = getStorage();
 
-const addCard = async (front, back, QImage, AImage, QAudio, AAudio) => {
-    const cardsRef = collection(doc(collection(firestore, "allCards"), auth.currentUser.uid), "cards");
+const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
+    const cardsRef = collection(doc(collection(firestore, "allCards"), user.uid), "cards");
 
     const revDate = new Date();
     revDate.setSeconds(revDate.getSeconds() + 5);
@@ -30,20 +38,20 @@ const addCard = async (front, back, QImage, AImage, QAudio, AAudio) => {
 
     if (QImage) {
         QImageId = uuidv4();
-        await uploadBytes(ref(storage, `/${auth.currentUser.uid}/${QImageId}`), QImage, { contentType: 'image/jpg' });
+        await uploadBytes(ref(storage, `/${user.uid}/${QImageId}`), QImage, { contentType: 'image/jpg' });
     }
     if (AImage) {
         AImageId = uuidv4();
-        await uploadBytes(ref(storage, `/${auth.currentUser.uid}/${AImageId}`), AImage, { contentType: 'image/jpg' });
+        await uploadBytes(ref(storage, `/${user.uid}/${AImageId}`), AImage, { contentType: 'image/jpg' });
     }
 
     if (QAudio) {
         QAudioId = uuidv4();
-        await uploadBytes(ref(storage, `/${auth.currentUser.uid}/${QAudioId}`), QAudio, { contentType: 'audio/mp3' });
+        await uploadBytes(ref(storage, `/${user.uid}/${QAudioId}`), QAudio, { contentType: 'audio/mp3' });
     }
     if (AAudio) {
-        AAudioId = uuidv4(); // ✅ fixed bug: was incorrectly setting AImageId
-        await uploadBytes(ref(storage, `/${auth.currentUser.uid}/${AAudioId}`), AAudio, { contentType: 'audio/mp3' });
+        AAudioId = uuidv4();
+        await uploadBytes(ref(storage, `/${user.uid}/${AAudioId}`), AAudio, { contentType: 'audio/mp3' });
     }
 
     await addDoc(cardsRef, {
@@ -59,6 +67,8 @@ const addCard = async (front, back, QImage, AImage, QAudio, AAudio) => {
 };
 
 function AddCardComponent() {
+    const [user] = useAuthState(auth);
+
     const [front, setFront] = useState('');
     const [back, setBack] = useState('');
 
@@ -79,7 +89,7 @@ function AddCardComponent() {
 
     const onAddCard = async (e) => {
         e.preventDefault();
-        await addCard(front, back, QImage, AImage, QAudio, AAudio);
+        await addCard(user, front, back, QImage, AImage, QAudio, AAudio);
 
         setFront('');
         setBack('');
@@ -96,90 +106,114 @@ function AddCardComponent() {
     };
 
     return (
-      <div className="centerContents">
-          <form
-            onSubmit={onAddCard}
-            style={{ grow: 1, display: "flex", flexDirection: "column", flexWrap: "wrap", width: "75%" }}
-          >
-              <label htmlFor="front"><b>Front</b></label>
-              <textarea
-                placeholder="Enter Front Side"
-                name="front"
-                id="front"
-                value={front}
-                onChange={(e) => setFront(e.target.value)}
-              />
+      <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+          <Paper elevation={3} sx={{ p: 3, width: '100%', maxWidth: 600 }}>
+              <Typography variant="h6" gutterBottom>
+                  Add New Card
+              </Typography>
+              <form onSubmit={onAddCard}>
+                  <Stack spacing={2}>
+                      <TextField
+                        label="Front"
+                        multiline
+                        minRows={3}
+                        value={front}
+                        onChange={(e) => setFront(e.target.value)}
+                        fullWidth
+                      />
 
-              <label htmlFor="imageQ"><b>Question Image</b></label>
-              <input
-                type="file"
-                id="imageQ"
-                onChange={(e) => {
-                    setQImage(e.target.files[0]);
-                    setQImageUrl(URL.createObjectURL(e.target.files[0]));
-                }}
-              />
-              {QImageUrl && <img src={QImageUrl} alt="question preview" />}
+                      <Button variant="outlined" component="label">
+                          Upload Question Image
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => {
+                                setQImage(e.target.files[0]);
+                                setQImageUrl(URL.createObjectURL(e.target.files[0]));
+                            }}
+                          />
+                      </Button>
+                      {QImageUrl && (
+                        <Box textAlign="center">
+                            <img src={QImageUrl} alt="question preview" style={{ maxWidth: '100%', marginTop: 8 }} />
+                        </Box>
+                      )}
 
-              <label htmlFor="audioQ"><b>Question Sound</b></label>
-              <input
-                type="file"
-                id="audioQ"
-                onChange={(e) => {
-                    setQAudio(e.target.files[0]);
-                    setQAudioUrl(URL.createObjectURL(e.target.files[0]));
-                    if (QAudioRef.current) {
-                        QAudioRef.current.pause();
-                        QAudioRef.current.load();
-                    }
-                }}
-              />
-              <audio controls ref={QAudioRef}>
-                  <source src={QAudioUrl} type="audio/mp3" />
-                  Your browser does not support the audio element.
-              </audio>
+                      <Button variant="outlined" component="label">
+                          Upload Question Audio
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => {
+                                setQAudio(e.target.files[0]);
+                                setQAudioUrl(URL.createObjectURL(e.target.files[0]));
+                                if (QAudioRef.current) {
+                                    QAudioRef.current.pause();
+                                    QAudioRef.current.load();
+                                }
+                            }}
+                          />
+                      </Button>
+                      {QAudioUrl && (
+                        <audio controls ref={QAudioRef} style={{ width: '100%' }}>
+                            <source src={QAudioUrl} type="audio/mp3" />
+                        </audio>
+                      )}
 
-              <label htmlFor="back"><b>Back</b></label>
-              <textarea
-                placeholder="Enter Back Side"
-                name="back"
-                id="back"
-                value={back}
-                onChange={(e) => setBack(e.target.value)}
-              />
+                      <TextField
+                        label="Back"
+                        multiline
+                        minRows={3}
+                        value={back}
+                        onChange={(e) => setBack(e.target.value)}
+                        fullWidth
+                      />
 
-              <label htmlFor="imageA"><b>Answer Image</b></label>
-              <input
-                type="file"
-                id="imageA"
-                onChange={(e) => {
-                    setAImage(e.target.files[0]);
-                    setAImageUrl(URL.createObjectURL(e.target.files[0]));
-                }}
-              />
-              {AImageUrl && <img src={AImageUrl} alt="answer preview" />}
+                      <Button variant="outlined" component="label">
+                          Upload Answer Image
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => {
+                                setAImage(e.target.files[0]);
+                                setAImageUrl(URL.createObjectURL(e.target.files[0]));
+                            }}
+                          />
+                      </Button>
+                      {AImageUrl && (
+                        <Box textAlign="center">
+                            <img src={AImageUrl} alt="answer preview" style={{ maxWidth: '100%', marginTop: 8 }} />
+                        </Box>
+                      )}
 
-              <label htmlFor="audioA"><b>Answer Sound</b></label>
-              <input
-                type="file"
-                id="audioA"
-                onChange={(e) => {
-                    setAAudio(e.target.files[0]);
-                    setAAudioUrl(URL.createObjectURL(e.target.files[0]));
-                    if (AAudioRef.current) {
-                        AAudioRef.current.pause();
-                        AAudioRef.current.load();
-                    }
-                }}
-              />
-              <audio controls ref={AAudioRef}>
-                  <source src={AAudioUrl} type="audio/mp3" />
-                  Your browser does not support the audio element.
-              </audio>
+                      <Button variant="outlined" component="label">
+                          Upload Answer Audio
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => {
+                                setAAudio(e.target.files[0]);
+                                setAAudioUrl(URL.createObjectURL(e.target.files[0]));
+                                if (AAudioRef.current) {
+                                    AAudioRef.current.pause();
+                                    AAudioRef.current.load();
+                                }
+                            }}
+                          />
+                      </Button>
+                      {AAudioUrl && (
+                        <audio controls ref={AAudioRef} style={{ width: '100%' }}>
+                            <source src={AAudioUrl} type="audio/mp3" />
+                        </audio>
+                      )}
 
-              <button type="submit">Add</button>
-          </form>
-      </div>
+                      <Button type="submit" variant="contained" color="primary">
+                          Add Card
+                      </Button>
+                  </Stack>
+              </form>
+          </Paper>
+      </Box>
     );
 }
 

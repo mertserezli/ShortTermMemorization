@@ -1,7 +1,6 @@
 import React from 'react';
-
+import { auth } from "./Firebase";
 import { exportToJson } from "./Utils";
-import { auth } from "./AuthProvider";
 import { useCollection } from "react-firebase-hooks/firestore";
 
 import {
@@ -18,23 +17,31 @@ import {
     deleteObject
 } from "firebase/storage";
 
+import {
+    Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, Paper, Button, Typography, Box
+} from '@mui/material';
+import {useAuthState} from "react-firebase-hooks/auth";
+
 const firestore = getFirestore();
 const storage = getStorage();
 
 export default function GraduatedCards() {
-    const path = collection(firestore, "allCards", auth.currentUser.uid, "cards");
+    const [user, , ] = useAuthState(auth);
+
+    const path = collection(firestore, "allCards", user.uid, "cards");
     const graduatedQuery = query(path, where("state", "==", 7));
     const [cardsCollection] = useCollection(graduatedQuery);
 
-    let cards = cardsCollection ? cardsCollection.docs.map((card) => {
-        let id = card.id;
-        card = card.data();
-        card.id = id;
-        return card
-    }) : []
+    let cards = cardsCollection
+      ? cardsCollection.docs.map((card) => {
+          let id = card.id;
+          let data = card.data();
+          return { ...data, id };
+      })
+      : [];
 
     const removeCard = async (card) => {
-        // Delete associated files from Storage
         if (card.QImageId) {
             await deleteObject(ref(storage, `/${auth.currentUser.uid}/${card.QImageId}`));
         }
@@ -52,31 +59,50 @@ export default function GraduatedCards() {
     };
 
     return (
-      <div>
-          <h1>Graduated Cards</h1>
-          <table>
-              <thead>
-              <tr>
-                  <th>Front</th>
-                  <th>Back</th>
-                  <th>Remove</th>
-              </tr>
-              </thead>
-              <tbody>
-              {cards && cards.map(c => (
-                <tr key={c.id}>
-                    <td>{c.front}</td>
-                    <td>{c.back}</td>
-                    <td>
-                        <button onClick={() => removeCard(c)}>Remove Card</button>
-                    </td>
-                </tr>
-              ))}
-              </tbody>
-          </table>
-          <button onClick={() => exportToJson(cards)}>
-              Export
-          </button>
-      </div>
+      <Box>
+          <Typography variant="h4" gutterBottom>
+              Graduated Cards
+          </Typography>
+
+          <TableContainer component={Paper}>
+              <Table>
+                  <TableHead>
+                      <TableRow>
+                          <TableCell><b>Front</b></TableCell>
+                          <TableCell><b>Back</b></TableCell>
+                          <TableCell><b>Remove</b></TableCell>
+                      </TableRow>
+                  </TableHead>
+                  <TableBody>
+                      {cards && cards.map(c => (
+                        <TableRow key={c.id}>
+                            <TableCell>{c.front}</TableCell>
+                            <TableCell>{c.back}</TableCell>
+                            <TableCell>
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  size="small"
+                                  onClick={() => removeCard(c)}
+                                >
+                                    Remove
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
+          </TableContainer>
+
+          <Box mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => exportToJson(cards)}
+              >
+                  Export
+              </Button>
+          </Box>
+      </Box>
     );
 }
