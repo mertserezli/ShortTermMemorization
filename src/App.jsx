@@ -105,7 +105,14 @@ function Memorization() {
             />
           </Tabs>
 
-          <div {...handlers}>
+          <div
+            {...handlers}
+            style={{
+             height: "100vh",        // full viewport height
+             display: "flex",
+             flexDirection: "column"
+            }}
+          >
             {tabIndex === 0 && (
               <Box sx={{ p: 2 }}>
                 <AddCardComponent />
