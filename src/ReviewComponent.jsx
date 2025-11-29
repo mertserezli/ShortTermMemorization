@@ -227,7 +227,7 @@ export default function ReviewComponent() {
                   </Box>
                 )}
 
-                <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                <Typography variant="h6" align="center" sx={{ mt: 2, whiteSpace: "pre-line" }}>
                     {curCard.front}
                 </Typography>
 
@@ -256,7 +256,7 @@ export default function ReviewComponent() {
                             </audio>
                         </Box>
                       )}
-                      <Typography variant="h6" align="center" sx={{ mt: 2 }}>
+                      <Typography variant="h6" align="center" sx={{ mt: 2, whiteSpace: "pre-line" }}>
                           {curCard.back}
                       </Typography>
                       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
