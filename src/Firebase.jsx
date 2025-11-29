@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator  } from "firebase/auth";
 import {connectFirestoreEmulator, getFirestore} from "firebase/firestore";
 import {connectStorageEmulator, getStorage} from "firebase/storage";
+import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDCyFHMeMgLltZbqS37Whh5vMlLM2UCllI",
@@ -25,4 +26,10 @@ if (import.meta.env.DEV) {
   connectStorageEmulator(storage, "localhost", 9199);
 }
 
-export { auth, db, storage };
+let analytics;
+
+if (typeof window !== 'undefined') {
+  analytics = getAnalytics(app);
+}
+
+export { auth, db, storage, analytics };
