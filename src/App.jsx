@@ -19,6 +19,7 @@ import HeaderBar from "./HeaderBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import SignUp from "./SignUp";
 import Profile from "./Profile";
+import NotFound from "./NotFound";
 
 function App() {
     const theme = createTheme({
@@ -38,6 +39,7 @@ function App() {
             <Route path={'/signup'} element={<SignUp />} />
             <Route path={'/forgotpassword'} element={<ForgotPassword />} />
             <Route path={'/profile'} element={<Profile />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
