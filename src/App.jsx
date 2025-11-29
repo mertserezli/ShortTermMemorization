@@ -7,7 +7,6 @@ import { AddCardComponent } from "./AddCard";
 import { ShowNotifications } from "./NotificationContextProvider";
 import ReviewComponent from "./ReviewComponent";
 import CardManager from "./CardManager";
-import GraduatedCards from "./GraduatedCards";
 import ForgotPassword from "./ForgotPassword";
 
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -15,7 +14,7 @@ import { useSwipeable } from "react-swipeable";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
-import {Badge, Grid, Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMediaQuery, useTheme, } from "@mui/material";
+import {Badge, Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMediaQuery, useTheme, } from "@mui/material";
 import HeaderBar from "./HeaderBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import SignUp from "./SignUp";
@@ -128,7 +127,6 @@ function Memorization() {
               <Box sx={{ p: 2 }}>
                 <ToggleNotifications />
                 <CardManager />
-                <GraduatedCards />
               </Box>
             )}
           </div>

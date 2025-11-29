@@ -23,7 +23,6 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import {useAuthState} from "react-firebase-hooks/auth";
 import {AddCardComponent} from "./AddCard";
 import CardManager from "./CardManager";
-import GraduatedCards from "./GraduatedCards";
 
 function getEarliestReviewDate(cards) {
     return Math.min(...cards.map(c => c.reviewDate));
@@ -63,14 +62,14 @@ export default function ReviewComponent() {
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
-            0: 5,
-            1: 25,
-            2: 2 * 60,
-            3: 10 * 60,
-            4: 60 * 60,
-            5: 5 * 60 * 60,
-            6: 24 * 60 * 60,
-            7: 1,
+            0: 5,             // 5 seconds
+            1: 25,            // 25 seconds
+            2: 2 * 60,        // 2 minutes
+            3: 10 * 60,       // 10 minutes
+            4: 60 * 60,       // 1 hour
+            5: 5 * 60 * 60,   // 5 hours
+            6: 24 * 60 * 60,  // 1 day
+            7: 1              // end
         };
 
         let newState = card.state;
@@ -199,8 +198,6 @@ export default function ReviewComponent() {
                   >
                       <Box sx={{ pl: 2, height: '100%', overflow: 'auto' }}>
                           <CardManager />
-                          <Divider sx={{ my: 2 }} />
-                          <GraduatedCards />
                       </Box>
                   </ResizableBox>
                 </Drawer>
