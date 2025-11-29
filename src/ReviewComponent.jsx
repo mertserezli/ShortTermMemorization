@@ -19,6 +19,7 @@ import {
     Paper, Dialog, Drawer, useTheme, useMediaQuery,
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import StorageIcon from "@mui/icons-material/Storage";
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import {useAuthState} from "react-firebase-hooks/auth";
 import {AddCardComponent} from "./AddCard";
@@ -160,7 +161,7 @@ export default function ReviewComponent() {
                 <Dialog open={openAddCardDialog} onClose={() => setOpenAddCardDialog(false)} fullWidth maxWidth="sm">
                     <AddCardComponent onClose={() => setOpenAddCardDialog(false)} />
                 </Dialog>
-                <Button variant="outlined" onClick={() => setOpenCardManagerDrawer(true)}>
+                <Button variant="outlined" endIcon={<StorageIcon />} onClick={() => setOpenCardManagerDrawer(true)}>
                   View Cards
                 </Button>
                   <Drawer

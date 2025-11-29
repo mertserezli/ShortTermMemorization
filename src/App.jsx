@@ -95,14 +95,7 @@ function Memorization() {
           >
             <Tab icon={<NoteAddIcon />} label="Add Card" />
             <Tab icon={<VisibilityIcon />} label="Review" />
-            <Tab
-              icon={<StorageIcon />}
-              label={
-                <Badge color="primary">
-                  Manager
-                </Badge>
-              }
-            />
+            <Tab icon={<StorageIcon />} label="My Cards"/>
           </Tabs>
 
           <div
