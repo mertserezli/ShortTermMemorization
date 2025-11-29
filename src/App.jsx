@@ -19,6 +19,7 @@ import {Badge, Grid, Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMedia
 import HeaderBar from "./HeaderBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import SignUp from "./SignUp";
+import Profile from "./Profile";
 
 function App() {
     const theme = createTheme({
@@ -37,7 +38,7 @@ function App() {
             <Route path={'/signin'} element={<SignIn />} />
             <Route path={'/signup'} element={<SignUp />} />
             <Route path={'/forgotpassword'} element={<ForgotPassword />} />
-            {/*<Route path={'/profile'} element={<Profile />} />*/}
+            <Route path={'/profile'} element={<Profile />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
