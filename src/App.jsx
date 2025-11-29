@@ -109,7 +109,7 @@ function Memorization() {
           <div
             {...handlers}
             style={{
-             height: "100vh",        // full viewport height
+             height: "100vh",
              display: "flex",
              flexDirection: "column"
             }}
@@ -134,25 +134,26 @@ function Memorization() {
           </div>
         </>
       ) : (
-        <Grid container spacing={2} sx={{ px: 2, pb: 2 }} alignItems="stretch" >
-          <Grid item size={{ xs: 12, md: 4 }}>
-            <Paper elevation={3} sx={{ p: 2, borderRadius: 2, backgroundColor: 'background.paper' }}>
-              <AddCardComponent />
-            </Paper>
-          </Grid>
-          <Grid item size={{ xs: 12, md: 4 }}>
-            <Paper elevation={3} sx={{ p: 2, borderRadius: 2, backgroundColor: 'background.paper' }}>
-              <ReviewComponent />
-            </Paper>
-          </Grid>
-          <Grid item size={{ xs: 12, md: 4 }}>
-            <Paper elevation={3} sx={{ p: 2, borderRadius: 2, backgroundColor: 'background.paper' }}>
-              <ToggleNotifications />
-              <CardManager />
-              <GraduatedCards />
-            </Paper>
-          </Grid>
-        </Grid>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            mt: 4,
+          }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: 'background.paper',
+              width: '35%',
+            }}
+          >
+            <ReviewComponent />
+          </Paper>
+        </Box>
       )}
     </>
   );

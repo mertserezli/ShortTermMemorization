@@ -20,7 +20,7 @@ import {
     TextField,
     Button,
     Typography,
-    Stack
+    Stack, DialogActions, DialogTitle, DialogContent
 } from '@mui/material';
 
 const firestore = getFirestore();
@@ -66,7 +66,7 @@ const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
     });
 };
 
-function AddCardComponent() {
+function AddCardComponent({onClose}) {
     const [user] = useAuthState(auth);
 
     const [front, setFront] = useState('');
@@ -103,14 +103,14 @@ function AddCardComponent() {
         setQAudioUrl('');
         setAAudio(null);
         setAAudioUrl('');
+
+        onClose();
     };
 
     return (
-      <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
-          <Paper elevation={3} sx={{ p: 3, width: '100%', maxWidth: 600 }}>
-              <Typography variant="h6" gutterBottom>
-                  Add New Card
-              </Typography>
+      <>
+          <DialogTitle>Add Card</DialogTitle>
+          <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
               <form onSubmit={onAddCard}>
                   <Stack spacing={2}>
                       <TextField
@@ -207,13 +207,15 @@ function AddCardComponent() {
                         </audio>
                       )}
 
-                      <Button type="submit" variant="contained" color="primary">
-                          Add Card
-                      </Button>
+                      <DialogActions>
+                          <Button type="submit" variant="contained" color="primary">
+                              Add Card
+                          </Button>
+                      </DialogActions>
                   </Stack>
               </form>
-          </Paper>
-      </Box>
+          </DialogContent>
+      </>
     );
 }
 

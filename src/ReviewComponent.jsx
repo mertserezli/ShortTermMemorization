@@ -3,6 +3,7 @@ import { ShowNotifications } from "./NotificationContextProvider";
 
 import { auth, db, storage } from "./Firebase";
 import { useCollection } from "react-firebase-hooks/firestore";
+import { ResizableBox } from 'react-resizable';
 
 import Loading from "./LoadingComponent";
 import CountdownCircle from "./CountdownCircle";
@@ -15,17 +16,27 @@ import {
     Typography,
     Button,
     Divider,
-    Paper
+    Paper, Dialog, Drawer, useTheme, useMediaQuery,
 } from '@mui/material';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import {useAuthState} from "react-firebase-hooks/auth";
+import {AddCardComponent} from "./AddCard";
+import CardManager from "./CardManager";
+import GraduatedCards from "./GraduatedCards";
 
 function getEarliestReviewDate(cards) {
     return Math.min(...cards.map(c => c.reviewDate));
 }
 
 export default function ReviewComponent() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { showNotifications } = useContext(ShowNotifications);
     const [user, ] = useAuthState(auth);
+
+    const [openAddCardDialog, setOpenAddCardDialog] = useState(false);
+    const [openCardManagerDrawer, setOpenCardManagerDrawer] = useState(false);
 
     const path = collection(db, "allCards", user.uid, "cards");
     const [cardsCollection] = useCollection(path);
@@ -135,6 +146,66 @@ export default function ReviewComponent() {
 
     return (
       <Box>
+          {!isMobile &&
+              <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2, // optional margin below
+                }}
+              >
+                <Button variant="contained" color="primary" startIcon={<AddCircleIcon />}  onClick={() => setOpenAddCardDialog(true)}>
+                  Add Card
+                </Button>
+                <Dialog open={openAddCardDialog} onClose={() => setOpenAddCardDialog(false)} fullWidth maxWidth="sm">
+                    <AddCardComponent onClose={() => setOpenAddCardDialog(false)} />
+                </Dialog>
+                <Button variant="outlined" onClick={() => setOpenCardManagerDrawer(true)}>
+                  View Cards
+                </Button>
+                  <Drawer
+                    anchor="right"
+                    open={openCardManagerDrawer}
+                    onClose={() => setOpenCardManagerDrawer(false)}
+                    variant="temporary"
+                  >
+                  <ResizableBox width={window.innerWidth/3}
+                                height={window.innerHeight}
+                                minConstraints={[300, window.innerHeight]}
+                                axis="x"
+                                resizeHandles={['w']}
+                                handle={
+                                    <Box
+                                      sx={{
+                                          width: 8,
+                                          cursor: 'col-resize',
+                                          bgcolor: 'divider',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          position: 'absolute',
+                                          left: 0,
+                                          top: 0,
+                                          bottom: 0,
+                                          '&:hover': {
+                                              bgcolor: 'grey.400',
+                                          },
+                                      }}
+                                    >
+                                        <DragIndicatorIcon fontSize="small" color="disabled" />
+                                    </Box>
+                                }
+                  >
+                      <Box sx={{ pl: 2, height: '100%', overflow: 'auto' }}>
+                          <CardManager />
+                          <Divider sx={{ my: 2 }} />
+                          <GraduatedCards />
+                      </Box>
+                  </ResizableBox>
+                </Drawer>
+              </Box>
+          }
           {curCard ? (
             <Paper sx={{ p: 2, mb: 2 }}>
                 {QImgUrl && (
