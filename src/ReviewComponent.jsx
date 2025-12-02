@@ -59,7 +59,7 @@ export default function ReviewComponent() {
         ...card.data(),
         id: card.id,
         reviewDate: card.data().reviewDate.toDate(),
-    })) ?? [];
+    })).filter(card => card.state !== 7) ?? [];
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
@@ -99,9 +99,7 @@ export default function ReviewComponent() {
     function pickCard() {
         clearTimeout(timeoutRef.current);
         if (cards && cards.length > 0) {
-            const toReview = cards.filter(
-              c => c.reviewDate < new Date() && c.state < 7
-            );
+            const toReview = cards.filter(c => c.reviewDate < new Date());
             if (curCard == null && toReview.length > 0) {
                 setShow(false);
                 setCurCard(toReview[0]);
