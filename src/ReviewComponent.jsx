@@ -168,7 +168,7 @@ export default function ReviewComponent() {
 
     return (
       <Box>
-          {!isMobile ?
+          {!isMobile &&
               <Box
                 sx={{
                     display: 'flex',
@@ -233,15 +233,6 @@ export default function ReviewComponent() {
                 </ResizableBox>
               </Drawer>
               </Box>
-          :
-            <ToggleButton
-              value="notifications"
-              selected={notificationsEnabled}
-              onChange={handleToggle}
-              color="primary"
-            >
-              {notificationsEnabled ? "Notifications ON" : "Notifications OFF"}
-            </ToggleButton>
           }
           {curCard ? (
             <Paper sx={{ p: 2, mb: 2 }}>
