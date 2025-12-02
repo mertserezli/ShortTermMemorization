@@ -1,5 +1,4 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
-import { ShowNotifications } from "./NotificationContextProvider";
+import React, {useState, useEffect, useRef} from 'react';
 
 import { auth, db, storage } from "./Firebase";
 import { useCollection } from "react-firebase-hooks/firestore";
@@ -16,7 +15,7 @@ import {
     Typography,
     Button,
     Divider,
-    Paper, Dialog, Drawer, useTheme, useMediaQuery,
+    Paper, Dialog, Drawer, useTheme, useMediaQuery, ToggleButton,
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import StorageIcon from "@mui/icons-material/Storage";
@@ -32,8 +31,8 @@ function getEarliestReviewDate(cards) {
 export default function ReviewComponent() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const { showNotifications } = useContext(ShowNotifications);
     const [user, ] = useAuthState(auth);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
     const [openAddCardDialog, setOpenAddCardDialog] = useState(false);
     const [openCardManagerDrawer, setOpenCardManagerDrawer] = useState(false);
@@ -60,6 +59,29 @@ export default function ReviewComponent() {
         id: card.id,
         reviewDate: card.data().reviewDate.toDate(),
     })).filter(card => card.state !== 7) ?? [];
+
+    const handleToggle = async () => {
+        if (!notificationsEnabled) {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                setNotificationsEnabled(true);
+                showNotification("Notifications enabled", "You'll get reminders when cards are due.");
+            } else {
+                alert("Notifications are blocked. Please allow them in your browser settings.");
+            }
+        } else {
+            setNotificationsEnabled(false);
+        }
+    };
+
+    const showNotification = (title, body) => {
+        if (notificationsEnabled && Notification.permission === "granted") {
+            new Notification(title, {
+                body,
+                icon: "/favicon.ico",
+            });
+        }
+    };
 
     const changeState = async (card, feedback) => {
         const stateToTime = {
@@ -129,7 +151,9 @@ export default function ReviewComponent() {
                     getDownloadURL(ref(storage, `/${user.uid}/${toReview[0].AAudioId}`))
                       .then(url => setAAudioUrl(url));
                 }
-            } else {
+
+                showNotification("Flashcard Review", "You have cards ready to review!");
+        } else {
                 timeoutRef.current = setTimeout(() => pickCard(), getEarliestReviewDate(cards) - new Date().getTime() + 500);
             }
         } else {
@@ -144,7 +168,7 @@ export default function ReviewComponent() {
 
     return (
       <Box>
-          {!isMobile &&
+          {!isMobile ?
               <Box
                 sx={{
                     display: 'flex',
@@ -159,48 +183,65 @@ export default function ReviewComponent() {
                 <Dialog open={openAddCardDialog} onClose={() => setOpenAddCardDialog(false)} fullWidth maxWidth="sm">
                     <AddCardComponent onClose={() => setOpenAddCardDialog(false)} />
                 </Dialog>
+                <ToggleButton
+                  value="notifications"
+                  selected={notificationsEnabled}
+                  onChange={handleToggle}
+                  color="primary"
+                >
+                    {notificationsEnabled ? "Notifications ON" : "Notifications OFF"}
+                </ToggleButton>
                 <Button variant="outlined" endIcon={<StorageIcon />} onClick={() => setOpenCardManagerDrawer(true)}>
-                  View Cards
+                View Cards
                 </Button>
-                  <Drawer
-                    anchor="right"
-                    open={openCardManagerDrawer}
-                    onClose={() => setOpenCardManagerDrawer(false)}
-                    variant="temporary"
-                  >
-                  <ResizableBox width={window.innerWidth/3}
-                                height={window.innerHeight}
-                                minConstraints={[300, window.innerHeight]}
-                                axis="x"
-                                resizeHandles={['w']}
-                                handle={
-                                    <Box
-                                      sx={{
-                                          width: 8,
-                                          cursor: 'col-resize',
-                                          bgcolor: 'divider',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          position: 'absolute',
-                                          left: 0,
-                                          top: 0,
-                                          bottom: 0,
-                                          '&:hover': {
-                                              bgcolor: 'grey.400',
-                                          },
-                                      }}
-                                    >
-                                        <DragIndicatorIcon fontSize="small" color="disabled" />
-                                    </Box>
-                                }
-                  >
-                      <Box sx={{ pl: 2, height: '100%', overflow: 'auto' }}>
-                          <CardManager />
-                      </Box>
-                  </ResizableBox>
-                </Drawer>
+                <Drawer
+                  anchor="right"
+                  open={openCardManagerDrawer}
+                  onClose={() => setOpenCardManagerDrawer(false)}
+                  variant="temporary"
+                >
+                <ResizableBox width={window.innerWidth/3}
+                              height={window.innerHeight}
+                              minConstraints={[300, window.innerHeight]}
+                              axis="x"
+                              resizeHandles={['w']}
+                              handle={
+                                  <Box
+                                    sx={{
+                                        width: 8,
+                                        cursor: 'col-resize',
+                                        bgcolor: 'divider',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        '&:hover': {
+                                            bgcolor: 'grey.400',
+                                        },
+                                    }}
+                                  >
+                                      <DragIndicatorIcon fontSize="small" color="disabled" />
+                                  </Box>
+                              }
+                >
+                  <Box sx={{ pl: 2, height: '100%', overflow: 'auto' }}>
+                      <CardManager />
+                  </Box>
+                </ResizableBox>
+              </Drawer>
               </Box>
+          :
+            <ToggleButton
+              value="notifications"
+              selected={notificationsEnabled}
+              onChange={handleToggle}
+              color="primary"
+            >
+              {notificationsEnabled ? "Notifications ON" : "Notifications OFF"}
+            </ToggleButton>
           }
           {curCard ? (
             <Paper sx={{ p: 2, mb: 2 }}>

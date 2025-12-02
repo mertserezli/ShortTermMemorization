@@ -4,7 +4,6 @@ import {BrowserRouter, Navigate, Route, Routes} from "react-router";
 import {auth} from "./Firebase";
 import SignIn from "./Signin";
 import { AddCardComponent } from "./AddCard";
-import { ShowNotifications } from "./NotificationContextProvider";
 import ReviewComponent from "./ReviewComponent";
 import CardManager from "./CardManager";
 import ForgotPassword from "./ForgotPassword";
@@ -14,7 +13,7 @@ import { useSwipeable } from "react-swipeable";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
-import {Badge, Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMediaQuery, useTheme, } from "@mui/material";
+import { Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMediaQuery, useTheme, } from "@mui/material";
 import HeaderBar from "./HeaderBar";
 import CssBaseline from "@mui/material/CssBaseline";
 import SignUp from "./SignUp";
@@ -47,24 +46,12 @@ function App() {
 }
 
 function Application() {
-    const [showNotifications, setShowNotifications] = useState(true);
     const [user, loading, ] = useAuthState(auth);
 
     return (
-      <ShowNotifications.Provider value={{ showNotifications, setShowNotifications }}>
-          <div className="App">
-              {loading ? <></> : user ? <Memorization /> : <Navigate replace to="/signin" />}
-          </div>
-      </ShowNotifications.Provider>
-    );
-}
-
-function ToggleNotifications() {
-    const { showNotifications, setShowNotifications } = useContext(ShowNotifications);
-    return (
-      <button onClick={() => setShowNotifications(!showNotifications)}>
-          toggle notifications: {showNotifications ? "on" : "off"}
-      </button>
+        <div className="App">
+            {loading ? <></> : user ? <Memorization /> : <Navigate replace to="/signin" />}
+        </div>
     );
 }
 
@@ -120,7 +107,6 @@ function Memorization() {
             )}
             {tabIndex === 2 && (
               <Box sx={{ p: 2 }}>
-                <ToggleNotifications />
                 <CardManager />
               </Box>
             )}
