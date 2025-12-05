@@ -1,5 +1,7 @@
 # 📘 Short Term Memo
 
+https://shorttermmemorization.web.app/
+
 Short Term Memo is a lightweight memorization tool designed to help you **quickly memorize information for short-term use**. It leverages the principles of [spaced repetition](https://en.wikipedia.org/wiki/Spaced_repetition) to optimize recall speed and efficiency.
 
 ---
