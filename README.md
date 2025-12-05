@@ -26,8 +26,6 @@ Short Term Memo is a lightweight memorization tool designed to help you **quickl
     - Export decks as **SuperMemo XML** format.
     - Export decks as **Anki CSV** format.
 
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -42,7 +40,7 @@ cd short-term-memo
 npm install
 npm run dev
 ```
----
+
 ## 🧩 Usage
 - Create flashcards with text, images, or audio.
 - Start a memorization session.
@@ -53,14 +51,14 @@ npm run dev
 - Export your deck:
   - anki_cards.csv for Anki.
   - supermemoItems.xml for SuperMemo.
----
+
 ## 🛠 Tech Stack
 - ⚛️ React + Vite
 - 🔥 Firebase (storage + hosting)
 - 📚 JSZip for export packaging
 - 🎨 Material UI for interface design
 - 🔔 Browser Notifications API for reminders
----
+
 ## 🙌 Contributing
 Pull requests are welcome!
 For major changes, please open an issue first to discuss what you’d like to change.
