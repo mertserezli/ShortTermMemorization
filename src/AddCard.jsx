@@ -37,20 +37,24 @@ const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
     let AAudioId = null;
 
     if (QImage) {
-        QImageId = uuidv4();
-        await uploadBytes(ref(storage, `/${user.uid}/${QImageId}`), QImage, { contentType: 'image/jpg' });
+        const ext = QImage.name.split(".").pop();
+        QImageId = `${uuidv4()}.${ext}`;
+        await uploadBytes(ref(storage, `/${user.uid}/${QImageId}`), QImage, { contentType: QImage.type });
     }
     if (AImage) {
-        AImageId = uuidv4();
+        const ext = AImage.name.split(".").pop();
+        AImageId = `${uuidv4()}.${ext}`;
         await uploadBytes(ref(storage, `/${user.uid}/${AImageId}`), AImage, { contentType: 'image/jpg' });
     }
 
     if (QAudio) {
-        QAudioId = uuidv4();
+        const ext = QAudio.name.split(".").pop();
+        QAudioId = `${uuidv4()}.${ext}`;
         await uploadBytes(ref(storage, `/${user.uid}/${QAudioId}`), QAudio, { contentType: 'audio/mp3' });
     }
     if (AAudio) {
-        AAudioId = uuidv4();
+        const ext = AAudio.name.split(".").pop();
+        AAudioId = `${uuidv4()}.${ext}`;
         await uploadBytes(ref(storage, `/${user.uid}/${AAudioId}`), AAudio, { contentType: 'audio/mp3' });
     }
 

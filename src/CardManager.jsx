@@ -1,17 +1,18 @@
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import React, {useState} from 'react';
 
-import { exportToJson } from "./Utils";
 import { auth } from "./Firebase";
-import { addCard } from "./AddCard";
 
 import { useCollection } from "react-firebase-hooks/firestore";
 import { getFirestore, collection, doc, deleteDoc } from "firebase/firestore";
-import { getStorage, ref, deleteObject } from "firebase/storage";
+import {getStorage, ref, deleteObject, getDownloadURL} from "firebase/storage";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import {
-    Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Button, Typography, Box, LinearProgress, Tooltip, ToggleButtonGroup, ToggleButton
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Button, Typography, Box, LinearProgress, Tooltip, ToggleButtonGroup, ToggleButton,
+  Menu, MenuItem
 } from '@mui/material';
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,55 +36,187 @@ function formatReviewDate(reviewDate) {
     } else if (target.getTime() === tomorrow.getTime()) {
         return "Tomorrow, " + reviewDate.toLocaleTimeString();
     } else {
-        return reviewDate.toLocaleString();
+        return "Overdue," + reviewDate.toLocaleDateString();
     }
 }
 
 export default function CardManager() {
-    const [user, , ] = useAuthState(auth);
-    const path = collection(firestore, "allCards", user.uid, "cards");
-    const [cardsCollection] = useCollection(path);
+  const [user, , ] = useAuthState(auth);
+  const path = collection(firestore, "allCards", user.uid, "cards");
+  const [cardsCollection] = useCollection(path);
 
-    const [filter, setFilter] = useState("all");
+  const [anchorEl, setAnchorEl] = useState(null);
 
-    const cards = cardsCollection?.docs.map(card => ({
-        ...card.data(),
-        id: card.id,
-        reviewDate: card.data().reviewDate.toDate(),
-    })) ?? [];
+  const [filter, setFilter] = useState("all");
 
-    const filteredCards = cards.filter(c => {
-        if (filter === "active") return c.state !== 7;
-        if (filter === "graduated") return c.state === 7;
-        return true; // "all"
-    });
+  const cards = cardsCollection?.docs.map(card => ({
+      ...card.data(),
+      id: card.id,
+      reviewDate: card.data().reviewDate.toDate(),
+  })) ?? [];
 
-    const removeCard = async (card) => {
-        if (card.QImageId) {
-            await deleteObject(ref(storage, `/${user.uid}/${card.QImageId}`));
-        }
-        if (card.AImageId) {
-            await deleteObject(ref(storage, `/${user.uid}/${card.AImageId}`));
-        }
-        if (card.QAudioId) {
-            await deleteObject(ref(storage, `/${user.uid}/${card.QAudioId}`));
-        }
-        if (card.AAudioId) {
-            await deleteObject(ref(storage, `/${user.uid}/${card.AAudioId}`));
-        }
-        await deleteDoc(doc(path, card.id));
-    };
+  const filteredCards = cards.filter(c => {
+      if (filter === "active") return c.state !== 7;
+      if (filter === "graduated") return c.state === 7;
+      return true; // "all"
+  });
 
-    const importJSON = e => {
-        const fileReader = new FileReader();
-        fileReader.readAsText(e.target.files[0], "UTF-8");
-        fileReader.onload = e => {
-            let cardsToImport = JSON.parse(e.target.result);
-            cardsToImport.forEach(c => addCard(c.front, c.back));
-        };
-    };
+  const removeCard = async (card) => {
+      if (card.QImageId) {
+          await deleteObject(ref(storage, `/${user.uid}/${card.QImageId}`));
+      }
+      if (card.AImageId) {
+          await deleteObject(ref(storage, `/${user.uid}/${card.AImageId}`));
+      }
+      if (card.QAudioId) {
+          await deleteObject(ref(storage, `/${user.uid}/${card.QAudioId}`));
+      }
+      if (card.AAudioId) {
+          await deleteObject(ref(storage, `/${user.uid}/${card.AAudioId}`));
+      }
+      await deleteDoc(doc(path, card.id));
+  };
 
-    return (
+  async function addFileToZip(zip, fileId) {
+    const url = await getDownloadURL(ref(storage, `/${user.uid}/${fileId}`));
+    const res = await fetch(url);
+    const blob = await res.blob();
+    zip.file(`collection.media/${fileId}`, blob);
+  }
+
+  async function exportToSuperMemo(cards, collectionTitle = "ShortTermMemoExport") {
+    const zip = new JSZip();
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<SuperMemoCollection>\n`;
+
+    xml += `\t<Count>${cards.length + 1}</Count>\n`;
+
+    xml += `\t<SuperMemoElement>\n`;
+    xml += `\t\t<ID>1</ID>\n`;
+    xml += `\t\t<Title>${collectionTitle}</Title>\n`;
+    xml += `\t\t<Type>Concept</Type>\n`;
+
+    for (const card of cards) {
+      const index = cards.indexOf(card);
+      const id = index + 2; // IDs start at 2 for items
+      xml += `\t\t<SuperMemoElement>\n`;
+      xml += `\t\t\t<ID>${id}</ID>\n`;
+      xml += `\t\t\t<Type>Item</Type>\n`;
+      xml += `\t\t\t<Content>\n`;
+      xml += `\t\t\t\t<Question>${card.front || ""}</Question>\n`;
+      xml += `\t\t\t\t<Answer>${card.back || ""}</Answer>\n`;
+
+      if (card.QImageId) {
+        await addFileToZip(zip, card.QImageId);
+
+        xml += `\t\t\t\t<Image>\n`;
+        xml += `\t\t\t\t\t<URL>.\\collection.media\\${card.QImageId}</URL>\n`;
+        xml += `\t\t\t\t\t<Name>${card.QImageId}</Name>\n`;
+        xml += `\t\t\t\t\t<Answer>F</Answer>\n`;
+        xml += `\t\t\t\t</Image>\n`;
+      }
+
+      if (card.QAudioId) {
+        await addFileToZip(zip, card.QAudioId);
+
+        xml += `\t\t\t\t<Sound>\n`;
+        xml += `\t\t\t\t\t<Text>${card.QAudioId}</Text>\n`;
+        xml += `\t\t\t\t\t<URL>.\\collection.media\\${card.QAudioId}</URL>\n`;
+        xml += `\t\t\t\t\t<Name>${card.QAudioId}</Name>\n`;
+        xml += `\t\t\t\t\t<Answer>F</Answer>\n`;
+        xml += `\t\t\t\t</Sound>\n`;
+      }
+
+      if (card.AImageId) {
+        await addFileToZip(zip, card.AImageId);
+
+        xml += `\t\t\t\t<Image>\n`;
+        xml += `\t\t\t\t\t<URL>.\\collection.media\\${card.AImageId}</URL>\n`;
+        xml += `\t\t\t\t\t<Name>${card.AImageId}</Name>\n`;
+        xml += `\t\t\t\t\t<Answer>T</Answer>\n`;
+        xml += `\t\t\t\t</Image>\n`;
+      }
+
+      if (card.AAudioId) {
+        await addFileToZip(zip, card.AAudioId);
+
+        xml += `\t\t\t\t<Sound>\n`;
+        xml += `\t\t\t\t\t<Text>${card.AAudioId}</Text>\n`;
+        xml += `\t\t\t\t\t<URL>.\\collection.media\\${card.AAudioId}</URL>\n`;
+        xml += `\t\t\t\t\t<Name>${card.AAudioId}</Name>\n`;
+        xml += `\t\t\t\t\t<Answer>F</Answer>\n`;
+        xml += `\t\t\t\t</Sound>\n`;
+      }
+
+      xml += `\t\t\t</Content>\n`;
+      xml += `\t\t</SuperMemoElement>\n`;
+    }
+
+    xml += `\t</SuperMemoElement>\n`;
+    xml += `</SuperMemoCollection>\n`;
+
+    zip.file("supermemoItems.xml", xml);
+    const blob = await zip.generateAsync({ type: "blob" });
+    saveAs(blob, "Supermemo_Export.zip");
+  }
+
+  async function exportToAnki(cards) {
+    const zip = new JSZip();
+    const rows = [];
+
+    rows.push("Front, FrontImg, FrontSound, Back, BackImg, BackSound");
+
+    for (const card of cards) {
+      if (card.QImageId) await addFileToZip(zip, card.QImageId);
+      if (card.AImageId) await addFileToZip(zip, card.AImageId);
+      if (card.QAudioId) await addFileToZip(zip, card.QAudioId);
+      if (card.AAudioId) await addFileToZip(zip, card.AAudioId);
+
+      const frontParts = [];
+      if (card.front)
+        frontParts.push(card.front);
+      else
+        frontParts.push("");
+      if (card.QImageId)
+        frontParts.push(`<img src='${card.QImageId}'>`);
+      else
+        frontParts.push("");
+      if (card.QAudioId)
+        frontParts.push(`[sound:${card.QAudioId}]`);
+      else
+        frontParts.push("");
+
+      const backParts = [];
+      if (card.back)
+        backParts.push(card.back);
+      else
+        backParts.push("");
+      if (card.AImageId)
+        backParts.push(`<img src='${card.AImageId}'>`)
+      else
+        backParts.push("");
+      if (card.AAudioId)
+        backParts.push(`[sound:${card.AAudioId}]`);
+      else
+        backParts.push("");
+
+      const front = frontParts.join(", ");
+      const back = backParts.join(", ");
+
+      rows.push(`${front},${back}`);
+    }
+
+    const csvContent = rows.join("\n");
+    zip.file("anki_cards.csv", csvContent);
+
+    const apkgResponse = await fetch("/ShortTermMemo.apkg");
+    const apkgBlob = await apkgResponse.blob();
+    zip.file("ShortTermMemo.apkg", apkgBlob);
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    saveAs(blob, "anki_export.zip");
+  }
+
+  return (
       <Box>
           <Typography variant="h4" gutterBottom>
               My Cards
@@ -176,29 +309,19 @@ export default function CardManager() {
               </Table>
           </TableContainer>
 
-          <Box mt={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ mr: 2 }}
-                onClick={() => exportToJson(cards)}
-              >
-                  Export
-              </Button>
-
-              <label htmlFor="avatar">
-                  <Typography variant="body1" component="span" sx={{ mr: 1 }}>
-                      Import:
-                  </Typography>
-              </label>
-              <input
-                type="file"
-                id="avatar"
-                name="import"
-                accept=".json"
-                onChange={importJSON}
-              />
-          </Box>
+        <Box mt={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+          >
+            Export As...
+          </Button>
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={()=> setAnchorEl(null)}>
+            <MenuItem onClick={() => exportToAnki(cards)}>Anki CSV</MenuItem>
+            <MenuItem onClick={() => exportToSuperMemo(cards)}>SuperMemo XML</MenuItem>
+          </Menu>
+        </Box>
       </Box>
     );
 }
