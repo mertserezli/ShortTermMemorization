@@ -18,20 +18,25 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 
 import { Link as RouterLink, Navigate, useNavigate } from 'react-router';
-import {useAuthState, useSignInWithEmailAndPassword, useSignInWithGoogle} from 'react-firebase-hooks/auth';
+import {
+  useAuthState,
+  useSignInWithEmailAndPassword,
+  useSignInWithGoogle,
+} from 'react-firebase-hooks/auth';
 import { Divider, InputAdornment, Tooltip } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import HeaderBar from './HeaderBar';
 
 export default function SignIn() {
   const navigate = useNavigate();
-  const [user, loading, ] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [signInWithGoogle, , , error] = useSignInWithGoogle(auth);
-  const [signInWithEmailAndPassword, , , error2] = useSignInWithEmailAndPassword(auth);
+  const [signInWithEmailAndPassword, , , error2] =
+    useSignInWithEmailAndPassword(auth);
 
   if (loading) {
     return <Typography>Loading...</Typography>;
@@ -64,14 +69,25 @@ export default function SignIn() {
     });
   };
 
+  const signInAnonymouslyHandler = () => {
+    signInAnonymously(auth)
+      .then((result) => {
+        if (result.user) navigate('/');
+      })
+      .catch((err) => {
+        console.error('Anonymous sign-in error:', err);
+      });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    signInWithEmailAndPassword(String(data.get('email')), String(data.get('password'))).then(
-      (result) => {
-        if (result.user) navigate('/');
-      }
-    );
+    signInWithEmailAndPassword(
+      String(data.get('email')),
+      String(data.get('password'))
+    ).then((result) => {
+      if (result.user) navigate('/');
+    });
   };
 
   return (
@@ -106,12 +122,26 @@ export default function SignIn() {
           >
             Sign in with Google
           </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            sx={{ mt: 2 }}
+            startIcon={<PersonIcon />}
+            onClick={signInAnonymouslyHandler}
+          >
+            Continue as Guest
+          </Button>
 
           <Divider sx={{ mt: 2, width: '100%' }} textAlign="center">
             or
           </Divider>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+          >
             <TextField
               margin="normal"
               required
@@ -136,7 +166,9 @@ export default function SignIn() {
               id="password"
               autoComplete="current-password"
               onKeyDown={(e) => {
-                setIsCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'));
+                setIsCapsLockOn(
+                  e.getModifierState && e.getModifierState('CapsLock')
+                );
               }}
               onBlur={() => {
                 setIsCapsLockOn(false);
@@ -171,7 +203,11 @@ export default function SignIn() {
             </Button>
             <Grid container justifyContent="space-between">
               <Grid item xs>
-                <Link component={RouterLink} to="/forgotpassword" variant="body2">
+                <Link
+                  component={RouterLink}
+                  to="/forgotpassword"
+                  variant="body2"
+                >
                   Forgot password?
                 </Link>
               </Grid>
