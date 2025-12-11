@@ -1,18 +1,18 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator  } from "firebase/auth";
-import {connectFirestoreEmulator, getFirestore} from "firebase/firestore";
-import {connectStorageEmulator, getStorage} from "firebase/storage";
+import { initializeApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDCyFHMeMgLltZbqS37Whh5vMlLM2UCllI",
-  authDomain: "shorttermmemorization.firebaseapp.com",
-  databaseURL: "https://shorttermmemorization.firebaseio.com",
-  projectId: "shorttermmemorization",
-  storageBucket: "shorttermmemorization.appspot.com",
-  messagingSenderId: "440994357739",
-  appId: "1:440994357739:web:db860414b9b1b007e479ae",
-  measurementId: "G-0KFM767G9X"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,9 +21,9 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 if (location.hostname === 'localhost') {
-  connectAuthEmulator(auth, "http://localhost:9099");
-  connectFirestoreEmulator(db, "localhost", 8080);
-  connectStorageEmulator(storage, "localhost", 9199);
+  connectAuthEmulator(auth, 'http://localhost:9099');
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectStorageEmulator(storage, 'localhost', 9199);
 }
 
 let analytics;
