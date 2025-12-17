@@ -2,15 +2,23 @@ import React from 'react';
 import { Link as RouterLink, NavLink } from 'react-router';
 import PropTypes from 'prop-types';
 
-import { AppBar, Toolbar, Typography, Stack, IconButton, Tooltip } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Stack,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import Link from '@mui/material/Link';
-import PsychologyIcon from '@mui/icons-material/Psychology';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useColorScheme } from '@mui/material/styles';
-import { auth } from './Firebase';
 import LogoutIcon from '@mui/icons-material/Logout';
+
+import { auth } from './Firebase';
+import Logo from './icons/logo.png';
 
 HeaderBar.propTypes = {
   showSignOut: PropTypes.bool,
@@ -21,13 +29,13 @@ export default function HeaderBar({ showSignOut = false }) {
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Link
           component={RouterLink}
-          to="/"
+          to="/app"
           underline="none"
           color="inherit"
           sx={{ fontWeight: 600 }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            <PsychologyIcon />
+            <img src={Logo} alt="logo" style={{ width: 28, height: 28 }} />
             <Typography variant="h6" component="div">
               Short Term Memo
             </Typography>
@@ -35,7 +43,7 @@ export default function HeaderBar({ showSignOut = false }) {
         </Link>
         <Stack direction="row" spacing={1}>
           <ThemeToggle />
-          {showSignOut &&
+          {showSignOut && (
             <Tooltip title="Profile">
               <IconButton
                 component={NavLink}
@@ -49,7 +57,7 @@ export default function HeaderBar({ showSignOut = false }) {
                 <AccountCircleIcon />
               </IconButton>
             </Tooltip>
-          }
+          )}
           {showSignOut && <SignOut />}
         </Stack>
       </Toolbar>
@@ -63,14 +71,16 @@ function ThemeToggle() {
   if (!mode) return null;
 
   return (
-    <IconButton onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
+    <IconButton
+      onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
+      color="inherit"
+    >
       {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
     </IconButton>
   );
 }
 
 function SignOut() {
-
   function handleSignOut() {
     auth.signOut();
   }

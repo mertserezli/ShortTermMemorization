@@ -1,58 +1,75 @@
-import React, { useState, useContext } from 'react';
-import {BrowserRouter, Navigate, Route, Routes} from "react-router";
+import React, { useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
-import {auth} from "./Firebase";
-import SignIn from "./Signin";
-import { AddCardComponent } from "./AddCard";
-import ReviewComponent from "./ReviewComponent";
-import CardManager from "./CardManager";
-import ForgotPassword from "./ForgotPassword";
+import { auth } from './Firebase';
+import SignIn from './Signin';
+import { AddCardComponent } from './AddCard';
+import ReviewComponent from './ReviewComponent';
+import CardManager from './CardManager';
+import ForgotPassword from './ForgotPassword';
 
-import { useAuthState } from "react-firebase-hooks/auth";
-import { useSwipeable } from "react-swipeable";
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useSwipeable } from 'react-swipeable';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
-import { Box, createTheme, Paper, Tabs, Tab, ThemeProvider, useMediaQuery, useTheme, } from "@mui/material";
-import HeaderBar from "./HeaderBar";
-import CssBaseline from "@mui/material/CssBaseline";
-import SignUp from "./SignUp";
-import Profile from "./Profile";
-import NotFound from "./NotFound";
+import {
+  Box,
+  createTheme,
+  Paper,
+  Tabs,
+  Tab,
+  ThemeProvider,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import HeaderBar from './HeaderBar';
+import CssBaseline from '@mui/material/CssBaseline';
+import SignUp from './SignUp';
+import Profile from './Profile';
+import NotFound from './NotFound';
+import LandingPage from './LandingPage';
 
 function App() {
-    const theme = createTheme({
-      colorSchemes: {
-        light: true,
-        dark: true,
-      },
-    });
+  const theme = createTheme({
+    colorSchemes: {
+      light: true,
+      dark: true,
+    },
+  });
 
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <Routes>
-            <Route path={'/'} element={<Application />} />
-            <Route path={'/signin'} element={<SignIn />} />
-            <Route path={'/signup'} element={<SignUp />} />
-            <Route path={'/forgotpassword'} element={<ForgotPassword />} />
-            <Route path={'/profile'} element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    );
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <Routes>
+          <Route path={'/'} element={<LandingPage />} />
+          <Route path={'/app'} element={<Application />} />
+          <Route path={'/signin'} element={<SignIn />} />
+          <Route path={'/signup'} element={<SignUp />} />
+          <Route path={'/forgotpassword'} element={<ForgotPassword />} />
+          <Route path={'/profile'} element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
 }
 
 function Application() {
-    const [user, loading, ] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
 
-    return (
-        <div className="App">
-            {loading ? <></> : user ? <Memorization /> : <Navigate replace to="/signin" />}
-        </div>
-    );
+  return (
+    <div className="App">
+      {loading ? (
+        <></>
+      ) : user ? (
+        <Memorization />
+      ) : (
+        <Navigate replace to="/signin" />
+      )}
+    </div>
+  );
 }
 
 function Memorization() {
@@ -67,7 +84,7 @@ function Memorization() {
   const handlers = useSwipeable({
     onSwipedLeft: () => setTabIndex((prev) => Math.min(prev + 1, 2)),
     onSwipedRight: () => setTabIndex((prev) => Math.max(prev - 1, 0)),
-    trackMouse: true // allows mouse drag on desktop
+    trackMouse: true, // allows mouse drag on desktop
   });
 
   return (
@@ -84,15 +101,15 @@ function Memorization() {
           >
             <Tab icon={<NoteAddIcon />} label="Add Card" />
             <Tab icon={<VisibilityIcon />} label="Review" />
-            <Tab icon={<StorageIcon />} label="My Cards"/>
+            <Tab icon={<StorageIcon />} label="My Cards" />
           </Tabs>
 
           <div
             {...handlers}
             style={{
-             height: "100vh",
-             display: "flex",
-             flexDirection: "column"
+              height: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {tabIndex === 0 && (

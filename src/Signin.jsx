@@ -42,7 +42,7 @@ export default function SignIn() {
     return <Typography>Loading...</Typography>;
   }
   if (user) {
-    return <Navigate replace to="/" />;
+    return <Navigate replace to="/app" />;
   }
 
   const handleEmailChange = (event) => {

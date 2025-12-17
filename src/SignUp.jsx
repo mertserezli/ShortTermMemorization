@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { Link as RouterLink, Navigate, useNavigate } from 'react-router';
 import { auth } from './Firebase';
 
-import {useAuthState, useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth';
+import {
+  useAuthState,
+  useCreateUserWithEmailAndPassword,
+} from 'react-firebase-hooks/auth';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -28,7 +31,7 @@ import {
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [curUser, curUserLoading, ] = useAuthState(auth);
+  const [curUser, curUserLoading] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
@@ -42,7 +45,7 @@ export default function SignUp() {
     return <Typography>Loading...</Typography>;
   }
   if (curUser) {
-    return <Navigate replace to="/" />;
+    return <Navigate replace to="/app" />;
   }
 
   const handleEmailChange = (event) => {
@@ -66,9 +69,10 @@ export default function SignUp() {
   function handleSubmit(event) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    createUserWithEmailAndPassword(String(data.get('email')), String(data.get('password'))).then(
-      () => navigate('/')
-    );
+    createUserWithEmailAndPassword(
+      String(data.get('email')),
+      String(data.get('password'))
+    ).then(() => navigate('/app'));
   }
 
   return (
@@ -108,7 +112,12 @@ export default function SignUp() {
               <br />
             </>
           )}
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+          >
             <TextField
               margin="normal"
               required
@@ -139,7 +148,9 @@ export default function SignUp() {
                 setPasswordStrength(evaluatePasswordStrength(pwd));
               }}
               onKeyDown={(e) => {
-                setIsCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'));
+                setIsCapsLockOn(
+                  e.getModifierState && e.getModifierState('CapsLock')
+                );
               }}
               onBlur={() => {
                 setIsCapsLockOn(false);
@@ -176,7 +187,8 @@ export default function SignUp() {
                   borderRadius: 5,
                   backgroundColor: '#e0e0e0',
                   '& .MuiLinearProgress-bar': {
-                    backgroundColor: passwordStrengthColorMap[passwordStrength] || '#90caf9',
+                    backgroundColor:
+                      passwordStrengthColorMap[passwordStrength] || '#90caf9',
                   },
                 }}
               />
