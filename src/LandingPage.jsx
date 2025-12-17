@@ -187,6 +187,7 @@ function Timeline() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const itemRefs = useRef([]);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -197,13 +198,22 @@ function Timeline() {
   }, [activeIndex]);
 
   useEffect(() => {
-    const el = itemRefs.current[activeIndex];
-    if (!el) return;
+    const container = containerRef.current;
+    const item = itemRefs.current[activeIndex];
+    if (!container || !item) return;
 
-    el.scrollIntoView({
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+
+    const offset =
+      itemRect.left -
+      containerRect.left -
+      containerRect.width / 2 +
+      itemRect.width / 2;
+
+    container.scrollBy({
+      left: offset,
       behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest',
     });
   }, [activeIndex]);
 
@@ -221,6 +231,7 @@ function Timeline() {
       </Typography>
 
       <Box
+        ref={containerRef}
         sx={{
           overflowX: 'auto',
           overflowY: 'hidden',
