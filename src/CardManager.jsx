@@ -341,11 +341,15 @@ export default function CardManager() {
                 <TableCell colSpan={4}>
                   <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="h6" color="text.secondary">
-                      No cards yet
+                      No cards in this category
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Use the &#34;Add Card&#34; button to create your first
-                      card.
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      Try switching filters above or add new cards to see them
+                      here.
                     </Typography>
                   </Box>
                 </TableCell>
