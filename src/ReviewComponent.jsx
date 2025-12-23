@@ -212,11 +212,9 @@ export default function ReviewComponent() {
 
     setShow(false);
 
-    const updatedNow = Date.now();
-    const nextCardsToReview = cards
-      .filter((c) => c.id !== card.id) // Exclude current card
-      .filter((c) => c.reviewDate.getTime() <= updatedNow);
-
+    const nextCardsToReview = cards.filter(
+      (c) => c.id !== card.id && c.reviewDate.getTime() <= Date.now()
+    );
     const nextCard = nextCardsToReview.length > 0 ? nextCardsToReview[0] : null;
 
     await updateDoc(doc(path, card.id), {
@@ -225,7 +223,6 @@ export default function ReviewComponent() {
     });
 
     setCurCard(nextCard);
-    setNow(updatedNow);
   };
 
   return (
