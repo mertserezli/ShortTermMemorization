@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from './Firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { ResizableBox } from 'react-resizable';
-import PropTypes from 'prop-types';
 
 import { AddCardComponent } from './AddCard';
 import Loading from './LoadingComponent';
@@ -30,10 +29,6 @@ import StorageIcon from '@mui/icons-material/Storage';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
-function getEarliestReviewDate(cards) {
-  return Math.min(...cards.map((c) => c.reviewDate));
-}
-
 const STATE_INTERVALS = {
   0: 5, // 5 seconds
   1: 25, // 25 seconds
@@ -45,13 +40,6 @@ const STATE_INTERVALS = {
   7: 1, // end
 };
 
-MediaDisplay.propTypes = {
-  url: PropTypes.string,
-  loaded: PropTypes.bool,
-  onLoad: PropTypes.func,
-  alt: PropTypes.string,
-  type: PropTypes.oneOf(['image', 'audio']),
-};
 function MediaDisplay({ url, loaded, onLoad, alt, type = 'image' }) {
   if (!url) return null;
 
@@ -81,35 +69,9 @@ function MediaDisplay({ url, loaded, onLoad, alt, type = 'image' }) {
   );
 }
 
-CardDisplay.propTypes = {
-  card: PropTypes.shape({
-    front: PropTypes.string.isRequired,
-    back: PropTypes.string.isRequired,
-  }).isRequired,
-  urls: PropTypes.shape({
-    QImg: PropTypes.string,
-    QAudio: PropTypes.string,
-    AImg: PropTypes.string,
-    AAudio: PropTypes.string,
-  }).isRequired,
-  loaded: PropTypes.shape({
-    QImg: PropTypes.bool,
-    AImg: PropTypes.bool,
-  }).isRequired,
-  setLoaded: PropTypes.func.isRequired,
-  show: PropTypes.bool.isRequired,
-  onShow: PropTypes.func.isRequired,
-  onFeedback: PropTypes.func.isRequired,
-};
-function CardDisplay({
-  card,
-  urls,
-  loaded,
-  setLoaded,
-  show,
-  onShow,
-  onFeedback,
-}) {
+function CardDisplay({ card, show, onShow, onFeedback }) {
+  const { urls, loaded, setLoaded } = useMediaUrls(card, auth.currentUser.uid);
+
   return (
     <Paper sx={{ p: 2, mb: 2 }}>
       <MediaDisplay
@@ -188,10 +150,10 @@ export default function ReviewComponent() {
   const [openCardManagerDrawer, setOpenCardManagerDrawer] = useState(false);
   const [curCard, setCurCard] = useState(null);
   const [show, setShow] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   const path = collection(db, 'allCards', user.uid, 'cards');
   const [cardsCollection] = useCollection(path);
-  const timeoutRef = useRef(null);
 
   const cards =
     cardsCollection?.docs
@@ -202,7 +164,44 @@ export default function ReviewComponent() {
       }))
       .filter((card) => card.state !== 7) ?? [];
 
-  const { urls, loaded, setLoaded } = useMediaUrls(curCard, user?.uid);
+  const cardsToReview = cards.filter((c) => c.reviewDate.getTime() <= now);
+
+  const earliestReviewDate =
+    cards.length > 0
+      ? Math.min(...cards.map((c) => c.reviewDate.getTime()))
+      : null;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (curCard && !cards.find((c) => c.id === curCard.id)) {
+      setCurCard(null);
+      setShow(false);
+      return;
+    }
+
+    if (curCard == null && cardsToReview.length > 0) {
+      setCurCard(cardsToReview[0]);
+    }
+  }, [cardsToReview, curCard, cards]);
+
+  const prevCardRef = useRef(null);
+  useEffect(() => {
+    if (
+      curCard &&
+      curCard !== prevCardRef.current &&
+      prevCardRef.current !== null
+    ) {
+      notifications.show('Flashcard Review', 'You have cards ready to review!');
+    }
+    prevCardRef.current = curCard;
+  }, [curCard, notifications]);
 
   const updateCardState = async (card, correct) => {
     const newState = Math.max(0, card.state + (correct ? 1 : -1));
@@ -212,40 +211,22 @@ export default function ReviewComponent() {
     );
 
     setShow(false);
-    setCurCard(null);
+
+    const updatedNow = Date.now();
+    const nextCardsToReview = cards
+      .filter((c) => c.id !== card.id) // Exclude current card
+      .filter((c) => c.reviewDate.getTime() <= updatedNow);
+
+    const nextCard = nextCardsToReview.length > 0 ? nextCardsToReview[0] : null;
 
     await updateDoc(doc(path, card.id), {
       reviewDate: newReviewDate,
       state: newState,
     });
+
+    setCurCard(nextCard);
+    setNow(updatedNow);
   };
-
-  const pickCard = () => {
-    clearTimeout(timeoutRef.current);
-
-    if (!cards?.length) {
-      timeoutRef.current = setTimeout(pickCard, 5000);
-      return;
-    }
-
-    const toReview = cards.filter((c) => c.reviewDate < new Date());
-
-    if (curCard == null && toReview.length > 0) {
-      setShow(false);
-      setCurCard(toReview[0]);
-      notifications.show('Flashcard Review', 'You have cards ready to review!');
-    } else {
-      timeoutRef.current = setTimeout(
-        pickCard,
-        getEarliestReviewDate(cards) - Date.now() + 500
-      );
-    }
-  };
-
-  useEffect(() => {
-    pickCard();
-    return () => clearTimeout(timeoutRef.current);
-  }, [cardsCollection]);
 
   return (
     <Box>
@@ -334,9 +315,6 @@ export default function ReviewComponent() {
       {curCard ? (
         <CardDisplay
           card={curCard}
-          urls={urls}
-          loaded={loaded}
-          setLoaded={setLoaded}
           show={show}
           onShow={() => setShow(true)}
           onFeedback={(correct) => updateCardState(curCard, correct)}
@@ -346,9 +324,7 @@ export default function ReviewComponent() {
           {!cards?.length ? (
             <Typography variant="h6">You have no cards. Add some</Typography>
           ) : (
-            <CountdownCircle
-              duration={(getEarliestReviewDate(cards) - Date.now()) / 1000}
-            />
+            <CountdownCircle targetTime={earliestReviewDate} />
           )}
         </Box>
       )}

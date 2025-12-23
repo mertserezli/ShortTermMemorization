@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { CircularProgress, Box, Typography } from '@mui/material';
 
-CountdownCircle.propTypes = {
-  duration: PropTypes.number.isRequired,
-};
-export default function CountdownCircle({ duration }) {
-  const [remaining, setRemaining] = useState(duration);
-  duration = Math.ceil(duration);
+export default function CountdownCircle({ targetTime }) {
+  const [now, setNow] = useState(Date.now());
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
-    setRemaining(Math.ceil(duration));
     const interval = setInterval(() => {
-      setRemaining((prev) => (prev > 0 ? prev - 1 : 0));
+      setNow(Date.now());
     }, 1000);
     return () => clearInterval(interval);
-  }, [duration]);
+  }, []);
 
-  const progress = ((duration - remaining) / duration) * 100;
+  const totalDuration = targetTime - startTime;
+  const remaining = Math.max(0, Math.ceil((targetTime - now) / 1000));
+
+  const elapsed = Math.min(totalDuration, now - startTime);
+  const progress = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 100;
 
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
