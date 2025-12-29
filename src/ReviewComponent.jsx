@@ -146,7 +146,11 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
 export default function ReviewComponent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isOpen: isTourOpen, currentStep: currentTourStep } = useTour();
+  const {
+    isOpen: isTourOpen,
+    currentStep: currentTourStep,
+    setCurrentStep: setCurrentTourStep,
+  } = useTour();
   const [user] = useAuthState(auth);
   const notifications = useNotifications();
 
@@ -233,14 +237,23 @@ export default function ReviewComponent() {
     isTourOpen &&
     1 <= currentTourStep &&
     currentTourStep <= 3 &&
-    !openAddCardDialog
+    !openAddCardDialog &&
+    !isMobile
   ) {
     setOpenAddCardDialog(true);
   } else if (isTourOpen && currentTourStep === 4 && openAddCardDialog) {
     setOpenAddCardDialog(false);
+  } else if (isTourOpen && currentTourStep === 8 && isMobile) {
+    // skip step 8
+    setCurrentTourStep((currentStep) => currentStep + 1);
   } else if (isTourOpen && currentTourStep === 6 && !show) {
     setShow(true);
-  } else if (isTourOpen && currentTourStep === 10 && !openCardManagerDrawer) {
+  } else if (
+    isTourOpen &&
+    currentTourStep === 10 &&
+    !openCardManagerDrawer &&
+    !isMobile
+  ) {
     setOpenCardManagerDrawer(true);
   }
 

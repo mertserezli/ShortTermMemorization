@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
 import { auth } from './Firebase';
@@ -17,7 +17,7 @@ import steps from './steps.jsx';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSwipeable } from 'react-swipeable';
-import { TourProvider } from '@reactour/tour';
+import { TourProvider, useTour } from '@reactour/tour';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -59,13 +59,27 @@ function App() {
 
 function Application() {
   const [user, loading] = useAuthState(auth);
+  const theme = useTheme();
 
   return (
     <div className="App">
       {loading ? (
         <></>
       ) : user ? (
-        <Memorization />
+        <TourProvider
+          steps={steps}
+          styles={{
+            popover: (base) => ({
+              ...base,
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              borderRadius: theme.shape.borderRadius,
+            }),
+          }}
+          disableDotsNavigation
+        >
+          <Memorization />
+        </TourProvider>
       ) : (
         <Navigate replace to="/signin" />
       )}
@@ -77,6 +91,7 @@ function Memorization() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabIndex, setTabIndex] = useState(1);
+  const { isOpen: isTourOpen, currentStep: currentTourStep } = useTour();
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -85,86 +100,95 @@ function Memorization() {
   const handlers = useSwipeable({
     onSwipedLeft: () => setTabIndex((prev) => Math.min(prev + 1, 2)),
     onSwipedRight: () => setTabIndex((prev) => Math.max(prev - 1, 0)),
-    trackMouse: true, // allows mouse drag on desktop
+    trackMouse: true,
   });
+
+  if (
+    isTourOpen &&
+    1 <= currentTourStep &&
+    currentTourStep <= 3 &&
+    tabIndex !== 0 &&
+    isMobile
+  ) {
+    setTabIndex(0);
+  } else if (
+    isTourOpen &&
+    currentTourStep === 10 &&
+    tabIndex !== 2 &&
+    isMobile
+  ) {
+    setTabIndex(2);
+  }
+  useEffect(() => {
+    if (isTourOpen && currentTourStep === 4 && tabIndex === 0) {
+      setTabIndex(1);
+    }
+  }, [isTourOpen, currentTourStep]);
 
   return (
     <>
-      <TourProvider
-        steps={steps}
-        styles={{
-          popover: (base) => ({
-            ...base,
-            backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            borderRadius: theme.shape.borderRadius,
-          }),
-        }}
-        disableDotsNavigation
-      >
-        <HeaderBar showSignOut={true} />
-        {isMobile ? (
-          <>
-            <Tabs
-              value={tabIndex}
-              onChange={handleTabChange}
-              variant="fullWidth"
-              textColor="primary"
-              indicatorColor="primary"
-            >
-              <Tab icon={<NoteAddIcon />} label="Add Card" />
-              <Tab icon={<VisibilityIcon />} label="Review" />
-              <Tab icon={<StorageIcon />} label="My Cards" />
-            </Tabs>
+      <HeaderBar showSignOut={true} />
+      {isMobile ? (
+        <>
+          <Tabs
+            value={tabIndex}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            textColor="primary"
+            indicatorColor="primary"
+          >
+            <Tab icon={<NoteAddIcon />} label="Add Card" data-tour="add-card" />
+            <Tab icon={<VisibilityIcon />} label="Review" />
+            <Tab icon={<StorageIcon />} label="My Cards" />
+          </Tabs>
 
-            <div
-              {...handlers}
-              style={{
-                height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              {tabIndex === 0 && (
-                <Box sx={{ p: 2 }}>
-                  <AddCardComponent />
-                </Box>
-              )}
-              {tabIndex === 1 && (
-                <Box sx={{ p: 2 }}>
-                  <ReviewComponent />
-                </Box>
-              )}
-              {tabIndex === 2 && (
-                <Box sx={{ p: 2 }}>
-                  <CardManager />
-                </Box>
-              )}
-            </div>
-          </>
-        ) : (
-          <Box
-            sx={{
+          <div
+            {...handlers}
+            style={{
+              height: '100vh',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              mt: 4,
+              flexDirection: 'column',
             }}
           >
-            <Paper
-              elevation={3}
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                backgroundColor: 'background.paper',
-                width: '35%',
-              }}
-            >
-              <ReviewComponent />
-            </Paper>
-          </Box>
-        )}
-      </TourProvider>
+            {tabIndex === 0 && (
+              <Box sx={{ p: 2 }}>
+                <AddCardComponent />
+              </Box>
+            )}
+            {tabIndex === 1 && (
+              <Box sx={{ p: 2 }}>
+                <ReviewComponent />
+              </Box>
+            )}
+            {tabIndex === 2 && (
+              <Box sx={{ p: 2 }}>
+                <CardManager />
+              </Box>
+            )}
+          </div>
+        </>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            mt: 4,
+          }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: 'background.paper',
+              width: '35%',
+            }}
+          >
+            <ReviewComponent />
+          </Paper>
+        </Box>
+      )}
     </>
   );
 }
