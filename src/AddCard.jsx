@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { auth, storage } from './Firebase';
 import { v4 as uuidv4 } from 'uuid';
 import PropTypes from 'prop-types';
@@ -17,6 +17,7 @@ import {
   DialogContent,
   Alert,
 } from '@mui/material';
+import { useTour } from '@reactour/tour';
 
 const firestore = getFirestore();
 
@@ -26,8 +27,8 @@ const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
     'cards'
   );
 
-  const revDate = new Date();
-  revDate.setSeconds(revDate.getSeconds() + 5);
+  const reviewDate = new Date();
+  reviewDate.setSeconds(reviewDate.getSeconds() + 5);
 
   let QImageId = null;
   let AImageId = null;
@@ -72,7 +73,7 @@ const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
     QAudioId,
     AAudioId,
     state: 0,
-    reviewDate: revDate,
+    reviewDate,
   });
 };
 
@@ -80,6 +81,11 @@ AddCardComponent.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
 function AddCardComponent({ onClose }) {
+  const {
+    isOpen: isTourOpen,
+    currentStep: currentTourStep,
+    setCurrentStep: setCurrentTourStep,
+  } = useTour();
   const [user] = useAuthState(auth);
 
   const [front, setFront] = useState('');
@@ -102,9 +108,29 @@ function AddCardComponent({ onClose }) {
 
   const isAnon = user.isAnonymous;
 
+  useEffect(() => {
+    if (
+      isTourOpen &&
+      1 <= currentTourStep &&
+      currentTourStep <= 3 &&
+      !front &&
+      !back
+    ) {
+      setFront('What is the capital city of France');
+      setBack('Paris');
+    }
+    if (isTourOpen && currentTourStep === 4 && front !== '') {
+      addCard(user, front, back, QImage, AImage, QAudio, AAudio);
+    }
+  }, [isTourOpen, currentTourStep]);
+
   const onAddCard = async (e) => {
     e.preventDefault();
     await addCard(user, front, back, QImage, AImage, QAudio, AAudio);
+
+    if (isTourOpen && currentTourStep === 3) {
+      setCurrentTourStep((currentStep) => currentStep + 1);
+    }
 
     setFront('');
     setBack('');
@@ -143,9 +169,15 @@ function AddCardComponent({ onClose }) {
               value={front}
               onChange={(e) => setFront(e.target.value)}
               fullWidth
+              data-tour="card-front"
             />
 
-            <Button variant="outlined" component="label" disabled={isAnon}>
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isAnon}
+              data-tour="card-image"
+            >
               Upload Question Image
               <input
                 type="file"
@@ -167,7 +199,12 @@ function AddCardComponent({ onClose }) {
               </Box>
             )}
 
-            <Button variant="outlined" component="label" disabled={isAnon}>
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={isAnon}
+              data-tour="card-audio"
+            >
               Upload Question Audio
               <input
                 type="file"
@@ -196,6 +233,7 @@ function AddCardComponent({ onClose }) {
               value={back}
               onChange={(e) => setBack(e.target.value)}
               fullWidth
+              data-tour="card-back"
             />
 
             <Button variant="outlined" component="label" disabled={isAnon}>
@@ -243,7 +281,12 @@ function AddCardComponent({ onClose }) {
             )}
 
             <DialogActions>
-              <Button type="submit" variant="contained" color="primary">
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                data-tour="add-card-modal"
+              >
                 Add Card
               </Button>
             </DialogActions>

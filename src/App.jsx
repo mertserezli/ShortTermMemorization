@@ -7,9 +7,17 @@ import { AddCardComponent } from './AddCard';
 import ReviewComponent from './ReviewComponent';
 import CardManager from './CardManager';
 import ForgotPassword from './ForgotPassword';
+import HeaderBar from './HeaderBar';
+import CssBaseline from '@mui/material/CssBaseline';
+import SignUp from './SignUp';
+import Profile from './Profile';
+import NotFound from './NotFound';
+import LandingPage from './LandingPage';
+import steps from './steps.jsx';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSwipeable } from 'react-swipeable';
+import { TourProvider } from '@reactour/tour';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
@@ -23,12 +31,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import HeaderBar from './HeaderBar';
-import CssBaseline from '@mui/material/CssBaseline';
-import SignUp from './SignUp';
-import Profile from './Profile';
-import NotFound from './NotFound';
-import LandingPage from './LandingPage';
 
 function App() {
   const theme = createTheme({
@@ -37,10 +39,9 @@ function App() {
       dark: true,
     },
   });
-
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
+      <CssBaseline enableColorScheme />
       <BrowserRouter>
         <Routes>
           <Route path={'/'} element={<LandingPage />} />
@@ -89,68 +90,81 @@ function Memorization() {
 
   return (
     <>
-      <HeaderBar showSignOut={true} />
-      {isMobile ? (
-        <>
-          <Tabs
-            value={tabIndex}
-            onChange={handleTabChange}
-            variant="fullWidth"
-            textColor="primary"
-            indicatorColor="primary"
-          >
-            <Tab icon={<NoteAddIcon />} label="Add Card" />
-            <Tab icon={<VisibilityIcon />} label="Review" />
-            <Tab icon={<StorageIcon />} label="My Cards" />
-          </Tabs>
+      <TourProvider
+        steps={steps}
+        styles={{
+          popover: (base) => ({
+            ...base,
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            borderRadius: theme.shape.borderRadius,
+          }),
+        }}
+        disableDotsNavigation
+      >
+        <HeaderBar showSignOut={true} />
+        {isMobile ? (
+          <>
+            <Tabs
+              value={tabIndex}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              textColor="primary"
+              indicatorColor="primary"
+            >
+              <Tab icon={<NoteAddIcon />} label="Add Card" />
+              <Tab icon={<VisibilityIcon />} label="Review" />
+              <Tab icon={<StorageIcon />} label="My Cards" />
+            </Tabs>
 
-          <div
-            {...handlers}
-            style={{
-              height: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {tabIndex === 0 && (
-              <Box sx={{ p: 2 }}>
-                <AddCardComponent />
-              </Box>
-            )}
-            {tabIndex === 1 && (
-              <Box sx={{ p: 2 }}>
-                <ReviewComponent />
-              </Box>
-            )}
-            {tabIndex === 2 && (
-              <Box sx={{ p: 2 }}>
-                <CardManager />
-              </Box>
-            )}
-          </div>
-        </>
-      ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            mt: 4,
-          }}
-        >
-          <Paper
-            elevation={3}
+            <div
+              {...handlers}
+              style={{
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {tabIndex === 0 && (
+                <Box sx={{ p: 2 }}>
+                  <AddCardComponent />
+                </Box>
+              )}
+              {tabIndex === 1 && (
+                <Box sx={{ p: 2 }}>
+                  <ReviewComponent />
+                </Box>
+              )}
+              {tabIndex === 2 && (
+                <Box sx={{ p: 2 }}>
+                  <CardManager />
+                </Box>
+              )}
+            </div>
+          </>
+        ) : (
+          <Box
             sx={{
-              p: 2,
-              borderRadius: 2,
-              backgroundColor: 'background.paper',
-              width: '35%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              mt: 4,
             }}
           >
-            <ReviewComponent />
-          </Paper>
-        </Box>
-      )}
+            <Paper
+              elevation={3}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: 'background.paper',
+                width: '35%',
+              }}
+            >
+              <ReviewComponent />
+            </Paper>
+          </Box>
+        )}
+      </TourProvider>
     </>
   );
 }

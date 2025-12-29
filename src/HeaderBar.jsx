@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link as RouterLink, NavLink } from 'react-router';
-import PropTypes from 'prop-types';
 
 import {
   AppBar,
@@ -11,19 +10,20 @@ import {
   Tooltip,
 } from '@mui/material';
 import Link from '@mui/material/Link';
+import { useColorScheme } from '@mui/material/styles';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useColorScheme } from '@mui/material/styles';
 import LogoutIcon from '@mui/icons-material/Logout';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import { auth } from './Firebase';
 import Logo from './icons/logo.png';
+import { useTour } from '@reactour/tour';
 
-HeaderBar.propTypes = {
-  showSignOut: PropTypes.bool,
-};
 export default function HeaderBar({ showSignOut = false }) {
+  const { setIsOpen, setCurrentStep } = useTour();
+
   return (
     <AppBar position="static" color="default" elevation={1}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -42,6 +42,17 @@ export default function HeaderBar({ showSignOut = false }) {
           </Stack>
         </Link>
         <Stack direction="row" spacing={1}>
+          <Tooltip title="Help">
+            <IconButton
+              aria-label="help"
+              onClick={() => {
+                setIsOpen(true);
+                setCurrentStep(0);
+              }}
+            >
+              <HelpOutlineIcon />
+            </IconButton>
+          </Tooltip>
           <ThemeToggle />
           {showSignOut && (
             <Tooltip title="Profile">

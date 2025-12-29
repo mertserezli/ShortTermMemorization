@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { auth } from './Firebase';
 import AnkiIcon from './icons/anki.svg';
@@ -43,6 +43,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useTour } from '@reactour/tour';
 
 const firestore = getFirestore();
 const storage = getStorage();
@@ -74,6 +75,11 @@ function formatReviewDate(reviewDate) {
 
 export default function CardManager() {
   const [user, ,] = useAuthState(auth);
+  const {
+    isOpen: isTourOpen,
+    currentStep: currentTourStep,
+    setCurrentStep: setCurrentTourStep,
+  } = useTour();
   const path = collection(firestore, 'allCards', user.uid, 'cards');
   const [cardsCollection] = useCollection(path);
 
@@ -94,6 +100,16 @@ export default function CardManager() {
     if (filter === 'graduated') return c.state === 7;
     return true; // "all"
   });
+
+  useEffect(() => {
+    if (isTourOpen && currentTourStep === 10) {
+      const timer = setTimeout(() => {
+        setCurrentTourStep(11);
+      }, 200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isTourOpen, currentTourStep]);
 
   const removeCard = async (card) => {
     if (card.QImageId) {
@@ -327,7 +343,7 @@ export default function CardManager() {
                       ? 'No reviews left'
                       : formatReviewDate(c.reviewDate)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-tour="card-remove">
                     <Tooltip title="Remove">
                       <IconButton size="small" onClick={() => removeCard(c)}>
                         <DeleteIcon />
@@ -359,7 +375,7 @@ export default function CardManager() {
         </Table>
       </TableContainer>
 
-      <Box mt={2}>
+      <Box mt={2} data-tour="export">
         <Button
           variant="text"
           color="primary"

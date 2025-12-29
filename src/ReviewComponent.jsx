@@ -28,6 +28,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import StorageIcon from '@mui/icons-material/Storage';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useTour } from '@reactour/tour';
 
 const STATE_INTERVALS = {
   0: 5, // 5 seconds
@@ -117,6 +118,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
               variant="contained"
               color="error"
               onClick={() => onFeedback(false)}
+              data-tour="card-again"
             >
               Again
             </Button>
@@ -124,6 +126,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
               variant="contained"
               color="success"
               onClick={() => onFeedback(true)}
+              data-tour="card-good"
             >
               Good
             </Button>
@@ -131,7 +134,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
         </>
       ) : (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Button variant="contained" onClick={onShow}>
+          <Button variant="contained" onClick={onShow} data-tour="card-show">
             Show
           </Button>
         </Box>
@@ -143,6 +146,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
 export default function ReviewComponent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { isOpen: isTourOpen, currentStep: currentTourStep } = useTour();
   const [user] = useAuthState(auth);
   const notifications = useNotifications();
 
@@ -225,8 +229,28 @@ export default function ReviewComponent() {
     setCurCard(nextCard);
   };
 
+  if (
+    isTourOpen &&
+    1 <= currentTourStep &&
+    currentTourStep <= 3 &&
+    !openAddCardDialog
+  ) {
+    setOpenAddCardDialog(true);
+  } else if (isTourOpen && currentTourStep === 4 && openAddCardDialog) {
+    setOpenAddCardDialog(false);
+  } else if (isTourOpen && currentTourStep === 6 && !show) {
+    setShow(true);
+  } else if (isTourOpen && currentTourStep === 10 && !openCardManagerDrawer) {
+    setOpenCardManagerDrawer(true);
+  }
+
   return (
-    <Box>
+    <Box data-tour="display">
+      <div
+        style={{ display: 'hidden' }}
+        data-tour="card-manager-open"
+        data-value={{ openCardManagerDrawer }}
+      />
       {!isMobile && (
         <Box
           sx={{
@@ -240,6 +264,7 @@ export default function ReviewComponent() {
             variant="contained"
             startIcon={<AddCircleIcon />}
             onClick={() => setOpenAddCardDialog(true)}
+            data-tour="add-card"
           >
             Add Card
           </Button>
@@ -249,6 +274,7 @@ export default function ReviewComponent() {
             selected={notifications.enabled}
             onChange={notifications.toggle}
             color="primary"
+            data-tour="toggle-notifications"
           >
             {notifications.enabled ? 'Notifications ON' : 'Notifications OFF'}
           </ToggleButton>
@@ -257,6 +283,7 @@ export default function ReviewComponent() {
             variant="outlined"
             endIcon={<StorageIcon />}
             onClick={() => setOpenCardManagerDrawer(true)}
+            data-tour="view-cards"
           >
             View Cards
           </Button>
