@@ -20,7 +20,11 @@ export default function CountdownCircle({ targetTime }) {
 
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <CircularProgress variant="determinate" value={progress} size={80} />
+      <CircularProgress
+        variant="determinate"
+        value={100 - progress}
+        size={80}
+      />
       <Box
         sx={{
           top: 0,
