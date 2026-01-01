@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { auth } from './Firebase';
 import AnkiIcon from './icons/anki.svg';
@@ -43,12 +44,13 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+
 import { useTour } from '@reactour/tour';
 
 const firestore = getFirestore();
 const storage = getStorage();
 
-function formatReviewDate(reviewDate) {
+function formatReviewDate(reviewDate, t) {
   const now = new Date();
 
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -65,15 +67,16 @@ function formatReviewDate(reviewDate) {
   );
 
   if (target.getTime() === today.getTime()) {
-    return 'Today, ' + reviewDate.toLocaleTimeString();
+    return `${t('today')}, ${reviewDate.toLocaleTimeString()}`;
   } else if (target.getTime() === tomorrow.getTime()) {
-    return 'Tomorrow, ' + reviewDate.toLocaleTimeString();
+    return `${t('tomorrow')}, ${reviewDate.toLocaleTimeString()}`;
   } else {
-    return 'Overdue,' + reviewDate.toLocaleDateString();
+    return `${t('overdue')}, ${reviewDate.toLocaleDateString()}`;
   }
 }
 
 export default function CardManager() {
+  const { t } = useTranslation();
   const [user, ,] = useAuthState(auth);
   const {
     isOpen: isTourOpen,
@@ -271,7 +274,7 @@ export default function CardManager() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        My Cards
+        {t('myCards')}
       </Typography>
 
       <ToggleButtonGroup
@@ -282,13 +285,13 @@ export default function CardManager() {
         color="primary"
       >
         <ToggleButton value="all" sx={{ textTransform: 'none' }}>
-          <ViewListIcon sx={{ mr: 1 }} /> All
+          <ViewListIcon sx={{ mr: 1 }} /> {t('all')}
         </ToggleButton>
         <ToggleButton value="active" sx={{ textTransform: 'none' }}>
-          <PendingActionsIcon sx={{ mr: 1 }} /> Active
+          <PendingActionsIcon sx={{ mr: 1 }} /> {t('active')}
         </ToggleButton>
         <ToggleButton value="graduated" sx={{ textTransform: 'none' }}>
-          <CheckCircleIcon sx={{ mr: 1 }} /> Graduated
+          <CheckCircleIcon sx={{ mr: 1 }} /> {t('graduated')}
         </ToggleButton>
       </ToggleButtonGroup>
 
@@ -297,13 +300,13 @@ export default function CardManager() {
           <TableHead>
             <TableRow>
               <TableCell>
-                <b>Front</b>
+                <b>{t('front')}</b>
               </TableCell>
               <TableCell>
-                <b>State</b>
+                <b>{t('state')}</b>
               </TableCell>
               <TableCell>
-                <b>Review Date</b>
+                <b>{t('reviewDate')}</b>
               </TableCell>
               <TableCell />
             </TableRow>
@@ -340,11 +343,11 @@ export default function CardManager() {
                   </TableCell>
                   <TableCell>
                     {c.state === 7
-                      ? 'No reviews left'
-                      : formatReviewDate(c.reviewDate)}
+                      ? t('noReviewsLeft')
+                      : formatReviewDate(c.reviewDate, t)}
                   </TableCell>
                   <TableCell data-tour="card-remove">
-                    <Tooltip title="Remove">
+                    <Tooltip title={t('remove')}>
                       <IconButton size="small" onClick={() => removeCard(c)}>
                         <DeleteIcon />
                       </IconButton>
@@ -357,15 +360,14 @@ export default function CardManager() {
                 <TableCell colSpan={4}>
                   <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="h6" color="text.secondary">
-                      No cards in this category
+                      {t('noCardsCategory')}
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
                       sx={{ mt: 1 }}
                     >
-                      Try switching filters above or add new cards to see them
-                      here.
+                      {t('trySwitching')}
                     </Typography>
                   </Box>
                 </TableCell>
@@ -386,7 +388,7 @@ export default function CardManager() {
           {exporting ? (
             <CircularProgress size={20} color="inherit" />
           ) : (
-            'Export as...'
+            t('exportAs')
           )}
         </Button>
         <Menu

@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
+import { Link as RouterLink, Navigate, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+
 import { auth } from './Firebase';
 import { signInAnonymously } from 'firebase/auth';
+import {
+  useAuthState,
+  useSignInWithEmailAndPassword,
+  useSignInWithGoogle,
+} from 'react-firebase-hooks/auth';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -16,18 +24,13 @@ import PersonIcon from '@mui/icons-material/Person';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
-
-import { Link as RouterLink, Navigate, useNavigate } from 'react-router';
-import {
-  useAuthState,
-  useSignInWithEmailAndPassword,
-  useSignInWithGoogle,
-} from 'react-firebase-hooks/auth';
-import { Divider, InputAdornment, Tooltip } from '@mui/material';
+import { Alert, Divider, InputAdornment, Tooltip } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+
 import HeaderBar from './HeaderBar';
 
 export default function SignIn() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState('');
@@ -37,13 +40,6 @@ export default function SignIn() {
   const [signInWithGoogle, , , error] = useSignInWithGoogle(auth);
   const [signInWithEmailAndPassword, , , error2] =
     useSignInWithEmailAndPassword(auth);
-
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
-  if (user) {
-    return <Navigate replace to="/app" />;
-  }
 
   const handleEmailChange = (event) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -90,6 +86,13 @@ export default function SignIn() {
     });
   };
 
+  if (loading) {
+    return <Typography>{t('loading')}</Typography>;
+  }
+  if (user) {
+    return <Navigate replace to="/app" />;
+  }
+
   return (
     <>
       <HeaderBar showSignOut={false} />
@@ -97,7 +100,7 @@ export default function SignIn() {
         <CssBaseline />
         <Box
           sx={{
-            marginTop: 8,
+            mt: 8,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -107,12 +110,8 @@ export default function SignIn() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Sign in
+            {t('signIn')}
           </Typography>
-          <span>{error && error.message}</span>
-          <br />
-          <span>{error2 && error2.message}</span>
-          <br />
           <Button
             fullWidth
             variant="outlined"
@@ -120,8 +119,9 @@ export default function SignIn() {
             startIcon={<GoogleIcon />}
             onClick={signInWithGoogleHandler}
           >
-            Sign in with Google
+            {t('signInWithGoogle')}
           </Button>
+
           <Button
             fullWidth
             variant="outlined"
@@ -129,13 +129,23 @@ export default function SignIn() {
             startIcon={<PersonIcon />}
             onClick={signInAnonymouslyHandler}
           >
-            Continue as Guest
+            {t('continueAsGuest')}
           </Button>
 
           <Divider sx={{ mt: 2, width: '100%' }} textAlign="center">
-            or
+            {t('or')}
           </Divider>
 
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {t(error.code) || error.message}
+            </Alert>
+          )}
+          {error2 && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {t(error2.code) || error2.message}
+            </Alert>
+          )}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -147,7 +157,7 @@ export default function SignIn() {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t('emailAddress')}
               name="email"
               autoComplete="email"
               autoFocus
@@ -161,7 +171,7 @@ export default function SignIn() {
               required
               fullWidth
               name="password"
-              label="Password"
+              label={t('password')}
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
@@ -170,14 +180,12 @@ export default function SignIn() {
                   e.getModifierState && e.getModifierState('CapsLock')
                 );
               }}
-              onBlur={() => {
-                setIsCapsLockOn(false);
-              }}
+              onBlur={() => setIsCapsLockOn(false)}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     {isCapsLockOn && (
-                      <Tooltip title="Caps Lock is ON">
+                      <Tooltip title={t('capsLockOn')}>
                         <WarningAmberIcon color="warning" />
                       </Tooltip>
                     )}
@@ -199,7 +207,7 @@ export default function SignIn() {
               sx={{ mt: 3, mb: 2 }}
               disabled={!!emailError || email.trim() === ''}
             >
-              Sign In
+              {t('signIn')}
             </Button>
             <Grid container justifyContent="space-between">
               <Grid item xs>
@@ -208,12 +216,12 @@ export default function SignIn() {
                   to="/forgotpassword"
                   variant="body2"
                 >
-                  Forgot password?
+                  {t('forgotPassword')}
                 </Link>
               </Grid>
               <Grid item>
-                <Link component={RouterLink} to={'/signup'} variant="body2">
-                  Don&#39;t have an account? Sign Up
+                <Link component={RouterLink} to="/signup" variant="body2">
+                  {t('dontHaveAccount')}
                 </Link>
               </Grid>
             </Grid>

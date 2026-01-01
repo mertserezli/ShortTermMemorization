@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 import {
   Typography,
@@ -22,9 +22,10 @@ import DownloadIcon from '@mui/icons-material/Download';
 import HeaderBar from './HeaderBar';
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
   return (
     <>
-      {/* Navbar */}
       <HeaderBar showSignOut={false} />
 
       {/* Hero */}
@@ -40,17 +41,12 @@ export default function LandingPage() {
           <Grid container spacing={6} alignItems="center">
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h3" fontWeight={700} gutterBottom>
-                Memorize Fast.
+                {t('heroTitle1')}
                 <br />
-                Forget Nothing (Today).
+                {t('heroTitle2')}
               </Typography>
-              <Typography
-                variant="h6"
-                color="text.secondary"
-                sx={{ marginBottom: '16px' }}
-              >
-                Short Term Memo is a lightweight memorization tool built for
-                rapid recall using aggressive spaced repetition intervals.
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                {t('heroSubtitle')}
               </Typography>
               <Stack direction="row" spacing={2}>
                 <Button
@@ -59,7 +55,7 @@ export default function LandingPage() {
                   variant="contained"
                   size="large"
                 >
-                  Get Started
+                  {t('getStarted')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -81,28 +77,28 @@ export default function LandingPage() {
       <Box sx={{ bgcolor: 'background.paper', py: 8 }}>
         <Container sx={{ py: 8 }}>
           <Typography variant="h4" fontWeight={600} textAlign="center" mb={6}>
-            Why Short Term Memo?
+            {t('whyTitle')}
           </Typography>
           <Grid container spacing={4}>
             <Feature
               icon={<FlashOnIcon fontSize="large" />}
-              title="Rapid Spaced Repetition"
-              description="Designed for short-term memory consolidation with fast, aggressive intervals."
+              title={t('rapidTitle')}
+              description={t('rapidDesc')}
             />
             <Feature
               icon={<MemoryIcon fontSize="large" />}
-              title="Rich Flashcards"
-              description="Create cards with text, images, and audio for maximum retention."
+              title={t('richTitle')}
+              description={t('richDesc')}
             />
             <Feature
               icon={<NotificationsActiveIcon fontSize="large" />}
-              title="Smart Notifications"
-              description="Get notified exactly when your memory needs reinforcement."
+              title={t('smartTitle')}
+              description={t('smartDesc')}
             />
             <Feature
               icon={<DownloadIcon fontSize="large" />}
-              title="Export Anywhere"
-              description="Export decks to Anki or SuperMemo."
+              title={t('exportTitle')}
+              description={t('exportDesc')}
             />
           </Grid>
         </Container>
@@ -124,20 +120,18 @@ export default function LandingPage() {
             gutterBottom
             color="text.primary"
           >
-            Memorize smarter, not longer
+            {t('ctaTitle')}
           </Typography>
-
           <Typography color="text.secondary" mb={4}>
-            Perfect for exams, interviews and language cramming.
+            {t('ctaSubtitle')}
           </Typography>
-
           <Button
             component={RouterLink}
             to="/app"
             variant="contained"
             size="large"
           >
-            Launch App
+            {t('launchApp')}
           </Button>
         </Container>
       </Box>
@@ -159,7 +153,7 @@ export default function LandingPage() {
               GitHub
             </Button>
             <Button component={RouterLink} to="/app">
-              App
+              {t('footerApp')}
             </Button>
           </Stack>
         </Container>
@@ -182,6 +176,7 @@ const intervals = [
 const BASE_TIME = 500;
 
 function Timeline() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeIndex, setActiveIndex] = useState(0);
@@ -227,7 +222,7 @@ function Timeline() {
       }}
     >
       <Typography variant="subtitle2" color="text.secondary" mb={2}>
-        Spaced repetition timeline
+        {t('timelineTitle')}
       </Typography>
 
       <Box
@@ -279,11 +274,6 @@ function Timeline() {
   );
 }
 
-Feature.propTypes = {
-  icon: PropTypes.node.isRequired,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-};
 function Feature({ icon, title, description }) {
   return (
     <Grid size={{ xs: 12, sm: 6, md: 3 }}>

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { auth, storage } from './Firebase';
+import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import PropTypes from 'prop-types';
 
+import { auth, storage } from './Firebase';
 import { getFirestore, collection, doc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -77,10 +77,8 @@ const addCard = async (user, front, back, QImage, AImage, QAudio, AAudio) => {
   });
 };
 
-AddCardComponent.propTypes = {
-  onClose: PropTypes.func.isRequired,
-};
 function AddCardComponent({ onClose }) {
+  const { t } = useTranslation();
   const {
     isOpen: isTourOpen,
     currentStep: currentTourStep,
@@ -150,20 +148,17 @@ function AddCardComponent({ onClose }) {
 
   return (
     <>
-      <DialogTitle>Add Card</DialogTitle>
+      <DialogTitle>{t('addCard')}</DialogTitle>
       <DialogContent
         dividers
         sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}
       >
         <form onSubmit={onAddCard}>
           <Stack spacing={2}>
-            {isAnon && (
-              <Alert severity="warning">
-                Anonymous users cannot upload files
-              </Alert>
-            )}
+            {isAnon && <Alert severity="warning">{t('anonWarning')}</Alert>}
+
             <TextField
-              label="Front"
+              label={t('front')}
               multiline
               minRows={3}
               value={front}
@@ -178,7 +173,7 @@ function AddCardComponent({ onClose }) {
               disabled={isAnon}
               data-tour="card-image"
             >
-              Upload Question Image
+              {t('uploadQImage')}
               <input
                 type="file"
                 accept="image/*"
@@ -193,7 +188,7 @@ function AddCardComponent({ onClose }) {
               <Box textAlign="center">
                 <img
                   src={QImageUrl}
-                  alt="question preview"
+                  alt={t('questionPreview')}
                   style={{ maxWidth: '100%', marginTop: 8 }}
                 />
               </Box>
@@ -205,7 +200,7 @@ function AddCardComponent({ onClose }) {
               disabled={isAnon}
               data-tour="card-audio"
             >
-              Upload Question Audio
+              {t('uploadQAudio')}
               <input
                 type="file"
                 accept="audio/*"
@@ -227,7 +222,7 @@ function AddCardComponent({ onClose }) {
             )}
 
             <TextField
-              label="Back"
+              label={t('back')}
               multiline
               minRows={3}
               value={back}
@@ -237,7 +232,7 @@ function AddCardComponent({ onClose }) {
             />
 
             <Button variant="outlined" component="label" disabled={isAnon}>
-              Upload Answer Image
+              {t('uploadAImage')}
               <input
                 type="file"
                 accept="image/*"
@@ -252,14 +247,14 @@ function AddCardComponent({ onClose }) {
               <Box textAlign="center">
                 <img
                   src={AImageUrl}
-                  alt="answer preview"
+                  alt={t('answerPreview')}
                   style={{ maxWidth: '100%', marginTop: 8 }}
                 />
               </Box>
             )}
 
             <Button variant="outlined" component="label" disabled={isAnon}>
-              Upload Answer Audio
+              {t('uploadAAudio')}
               <input
                 type="file"
                 accept="audio/*"
@@ -287,7 +282,7 @@ function AddCardComponent({ onClose }) {
                 color="primary"
                 data-tour="add-card-modal"
               >
-                Add Card
+                {t('addCard')}
               </Button>
             </DialogActions>
           </Stack>

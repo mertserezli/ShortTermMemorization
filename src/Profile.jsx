@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+
 import { auth } from './Firebase';
 import {
   updatePassword,
@@ -8,8 +11,7 @@ import {
   GoogleAuthProvider,
   linkWithPopup,
 } from 'firebase/auth';
-import { Navigate } from 'react-router';
-import {useAuthState} from "react-firebase-hooks/auth";
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 import {
   Container,
@@ -30,11 +32,13 @@ import {
   evaluatePasswordStrength,
   getPasswordStrengthProgressValue,
   passwordStrengthColorMap,
-  passwordStrengthHintMap,
+  passwordStrengthHintKeyMap,
 } from './passwordStrength';
 
 export default function Profile() {
-  const [user, loading, ] = useAuthState(auth);
+  const { t } = useTranslation();
+
+  const [user, loading] = useAuthState(auth);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -47,13 +51,15 @@ export default function Profile() {
   const [status, setStatus] = useState('');
 
   if (loading) {
-    return <Typography>Loading...</Typography>;
+    return <Typography>{t('loading')}</Typography>;
   }
   if (!user) {
     return <Navigate replace to="/signin" />;
   }
 
-  const isEmailPassword = user.providerData.some((profile) => profile.providerId === 'password');
+  const isEmailPassword = user.providerData.some(
+    (profile) => profile.providerId === 'password'
+  );
   const isAnonymous = user.isAnonymous;
 
   const togglePasswordVisibility = () => {
@@ -65,17 +71,20 @@ export default function Profile() {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser || !currentUser.email) {
-        setStatus('No user is signed in.');
+        setStatus(t('noUserSignedIn'));
         return;
       }
 
-      const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        currentPassword
+      );
       await reauthenticateWithCredential(currentUser, credential);
 
       await updatePassword(currentUser, newPassword);
-      setStatus('Password updated successfully!');
+      setStatus(t('passwordUpdated'));
     } catch (error) {
-      setStatus(error.message);
+      setStatus(t(error.code) || error.message);
     }
   };
 
@@ -83,11 +92,14 @@ export default function Profile() {
     e.preventDefault();
     try {
       const currentUser = auth.currentUser;
-      const credential = EmailAuthProvider.credential(upgradeEmail, upgradePassword);
+      const credential = EmailAuthProvider.credential(
+        upgradeEmail,
+        upgradePassword
+      );
       await linkWithCredential(currentUser, credential);
-      setStatus('Account upgraded successfully! You now have a permanent account.');
+      setStatus(t('accountUpgraded'));
     } catch (error) {
-      setStatus(error.message);
+      setStatus(t(error.code) || error.message);
     }
   };
 
@@ -98,9 +110,9 @@ export default function Profile() {
 
       await linkWithPopup(currentUser, provider);
 
-      setStatus('Account upgraded successfully with Google!');
+      setStatus(t('accountUpgradedGoogle'));
     } catch (error) {
-      setStatus(error.message);
+      setStatus(t(error.code) || error.message);
     }
   };
 
@@ -110,30 +122,32 @@ export default function Profile() {
       <Container maxWidth="xs">
         <Box
           sx={{
-            marginTop: 4,
+            mt: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
           }}
         >
           <Typography component="h1" variant="h5">
-            Profile Settings
+            {t('profileSettings')}
           </Typography>
 
           {isEmailPassword && (
-            <Box component="form" onSubmit={handlePasswordChange} sx={{ mt: 2 }}>
+            <Box
+              component="form"
+              onSubmit={handlePasswordChange}
+              sx={{ mt: 2 }}
+            >
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Change Password
+                {t('changePassword')}
               </Typography>
               <TextField
                 fullWidth
                 required
-                label="Current Password"
+                label={t('currentPassword')}
                 type={showPassword ? 'text' : 'password'}
                 value={currentPassword}
-                onChange={(e) => {
-                  setCurrentPassword(e.target.value);
-                }}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 sx={{ mb: 2 }}
                 InputProps={{
                   endAdornment: (
@@ -148,23 +162,25 @@ export default function Profile() {
               <TextField
                 fullWidth
                 required
-                label="New Password"
+                label={t('newPassword')}
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => {
                   const pwd = e.target.value;
-                  setNewPassword(e.target.value);
+                  setNewPassword(pwd);
                   setPasswordStrength(evaluatePasswordStrength(pwd));
                 }}
                 onKeyDown={(e) =>
-                  setIsCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'))
+                  setIsCapsLockOn(
+                    e.getModifierState && e.getModifierState('CapsLock')
+                  )
                 }
                 onBlur={() => setIsCapsLockOn(false)}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       {isCapsLockOn && (
-                        <Tooltip title="Caps Lock is ON">
+                        <Tooltip title={t('capsLockOn')}>
                           <WarningAmberIcon color="warning" />
                         </Tooltip>
                       )}
@@ -176,9 +192,11 @@ export default function Profile() {
                 }}
               />
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Password Strength: {passwordStrength}
+                {t('passwordStrength')}: {t(passwordStrength)}
               </Typography>
-              <Tooltip title={passwordStrengthHintMap[passwordStrength] || ''}>
+              <Tooltip
+                title={t(passwordStrengthHintKeyMap[passwordStrength]) || ''}
+              >
                 <LinearProgress
                   variant="determinate"
                   value={getPasswordStrengthProgressValue(passwordStrength)}
@@ -188,7 +206,8 @@ export default function Profile() {
                     borderRadius: 5,
                     backgroundColor: '#e0e0e0',
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: passwordStrengthColorMap[passwordStrength] || '#90caf9',
+                      backgroundColor:
+                        passwordStrengthColorMap[passwordStrength] || '#90caf9',
                     },
                   }}
                 />
@@ -200,20 +219,24 @@ export default function Profile() {
                 sx={{ mt: 3 }}
                 disabled={!currentPassword || !newPassword}
               >
-                Update Password
+                {t('updatePassword')}
               </Button>
             </Box>
           )}
 
           {isAnonymous && (
-            <Box component="form" onSubmit={handleUpgradeAccount} sx={{ mt: 2 }}>
+            <Box
+              component="form"
+              onSubmit={handleUpgradeAccount}
+              sx={{ mt: 2 }}
+            >
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Upgrade your guest account to a permanent account:
+                {t('upgradeGuest')}
               </Typography>
               <TextField
                 fullWidth
                 required
-                label="Email"
+                label={t('emailAddress')}
                 type="email"
                 value={upgradeEmail}
                 onChange={(e) => setUpgradeEmail(e.target.value)}
@@ -222,7 +245,7 @@ export default function Profile() {
               <TextField
                 fullWidth
                 required
-                label="Password"
+                label={t('password')}
                 type={showPassword ? 'text' : 'password'}
                 value={upgradePassword}
                 onChange={(e) => {
@@ -231,14 +254,16 @@ export default function Profile() {
                   setPasswordStrength(evaluatePasswordStrength(pwd));
                 }}
                 onKeyDown={(e) =>
-                  setIsCapsLockOn(e.getModifierState && e.getModifierState('CapsLock'))
+                  setIsCapsLockOn(
+                    e.getModifierState && e.getModifierState('CapsLock')
+                  )
                 }
                 onBlur={() => setIsCapsLockOn(false)}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       {isCapsLockOn && (
-                        <Tooltip title="Caps Lock is ON">
+                        <Tooltip title={t('capsLockOn')}>
                           <WarningAmberIcon color="warning" />
                         </Tooltip>
                       )}
@@ -250,9 +275,11 @@ export default function Profile() {
                 }}
               />
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Password Strength: {passwordStrength}
+                {t('passwordStrength')}: {t(passwordStrength)}
               </Typography>
-              <Tooltip title={passwordStrengthHintMap[passwordStrength] || ''}>
+              <Tooltip
+                title={t(passwordStrengthHintKeyMap[passwordStrength]) || ''}
+              >
                 <LinearProgress
                   variant="determinate"
                   value={getPasswordStrengthProgressValue(passwordStrength)}
@@ -262,7 +289,8 @@ export default function Profile() {
                     borderRadius: 5,
                     backgroundColor: '#e0e0e0',
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: passwordStrengthColorMap[passwordStrength] || '#90caf9',
+                      backgroundColor:
+                        passwordStrengthColorMap[passwordStrength] || '#90caf9',
                     },
                   }}
                 />
@@ -274,10 +302,15 @@ export default function Profile() {
                 sx={{ mt: 3 }}
                 disabled={!upgradeEmail || !upgradePassword}
               >
-                Upgrade Account
+                {t('upgradeAccount')}
               </Button>
-              <Button fullWidth variant="outlined" sx={{ mt: 2 }} onClick={handleUpgradeWithGoogle}>
-                Upgrade with Google
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ mt: 2 }}
+                onClick={handleUpgradeWithGoogle}
+              >
+                {t('upgradeWithGoogle')}
               </Button>
             </Box>
           )}

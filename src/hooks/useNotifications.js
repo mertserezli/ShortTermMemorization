@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function useNotifications() {
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState(false);
 
   const toggle = async () => {
@@ -8,14 +10,12 @@ export function useNotifications() {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setEnabled(true);
-        show(
-          'Notifications enabled',
-          "You'll get reminders when cards are due."
-        );
+        new Notification(t('notificationsEnabled'), {
+          body: t('notificationsReminder'),
+          icon: '/favicon.ico',
+        });
       } else {
-        alert(
-          'Notifications are blocked. Please allow them in your browser settings.'
-        );
+        alert(t('notificationsBlocked'));
       }
     } else {
       setEnabled(false);

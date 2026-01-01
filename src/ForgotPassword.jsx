@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link as RouterLink } from 'react-router';
+
 import { auth } from './Firebase';
+import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -12,18 +16,19 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 
-import { Link as RouterLink } from 'react-router';
-import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
-import HeaderBar from "./HeaderBar";
+import HeaderBar from './HeaderBar';
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [sendPasswordResetEmail, , error] = useSendPasswordResetEmail(auth);
   const [result, setResult] = useState(undefined);
 
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    sendPasswordResetEmail(String(data.get('email'))).then((result) => setResult(result));
+    sendPasswordResetEmail(String(data.get('email'))).then((result) =>
+      setResult(result)
+    );
   };
 
   return (
@@ -43,7 +48,7 @@ export default function ForgotPassword() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Forgot Password
+            {t('forgotPasswordPage')}
           </Typography>
           {error && (
             <span>
@@ -53,33 +58,43 @@ export default function ForgotPassword() {
           )}
           {result === true && (
             <span>
-              E-mail sent.
+              {t('emailSent')}
               <br />
             </span>
           )}
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+          >
             <TextField
               margin="normal"
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t('emailAddress')}
               name="email"
               autoComplete="email"
               autoFocus
             />
-            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-              Reset Password
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              {t('resetPassword')}
             </Button>
             <Grid container>
-              <Grid item xs>
+              <Grid size="grow">
                 <Link component={RouterLink} to="/signin" variant="body2">
-                  Sign-in
+                  {t('signInLink')}
                 </Link>
               </Grid>
-              <Grid item>
+              <Grid>
                 <Link component={RouterLink} to={'/signup'} variant="body2">
-                  Don&#39;t have an account? Sign Up
+                  {t('dontHaveAccount')}
                 </Link>
               </Grid>
             </Grid>

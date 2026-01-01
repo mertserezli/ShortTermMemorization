@@ -1,19 +1,19 @@
 // passwordStrength.js
 
 export const passwordStrengthColorMap = {
-  'Very Weak': '#d32f2f', // red
-  Weak: '#f57c00', // orange
-  Moderate: '#fbc02d', // yellow
-  Strong: '#388e3c', // green
-  'Very Strong': '#2e7d32', // dark green
+  veryWeak: '#d32f2f', // red
+  weak: '#f57c00', // orange
+  moderate: '#fbc02d', // yellow
+  strong: '#388e3c', // green
+  veryStrong: '#2e7d32', // dark green
 };
 
-export const passwordStrengthHintMap = {
-  'Very Weak': 'Try adding uppercase letters, numbers, and symbols.',
-  Weak: 'Include more character types for better security.',
-  Moderate: 'Good start! Add symbols or longer length.',
-  Strong: 'Strong password. Consider making it even longer.',
-  'Very Strong': 'Excellent! Your password is very secure.',
+export const passwordStrengthHintKeyMap = {
+  veryWeak: 'veryWeakHint',
+  weak: 'weakHint',
+  moderate: 'moderateHint',
+  strong: 'strongHint',
+  veryStrong: 'veryStrongHint',
 };
 
 export function evaluatePasswordStrength(pwd) {
@@ -27,15 +27,15 @@ export function evaluatePasswordStrength(pwd) {
   switch (score) {
     case 0:
     case 1:
-      return 'Very Weak';
+      return 'veryWeak';
     case 2:
-      return 'Weak';
+      return 'weak';
     case 3:
-      return 'Moderate';
+      return 'moderate';
     case 4:
-      return 'Strong';
+      return 'strong';
     case 5:
-      return 'Very Strong';
+      return 'veryStrong';
     default:
       return '';
   }
@@ -43,15 +43,15 @@ export function evaluatePasswordStrength(pwd) {
 
 export function getPasswordStrengthProgressValue(strength) {
   switch (strength) {
-    case 'Very Weak':
+    case 'veryWeak':
       return 20;
-    case 'Weak':
+    case 'weak':
       return 40;
-    case 'Moderate':
+    case 'moderate':
       return 60;
-    case 'Strong':
+    case 'strong':
       return 80;
-    case 'Very Strong':
+    case 'veryStrong':
       return 100;
     default:
       return 0;

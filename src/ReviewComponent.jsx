@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { auth, db } from './Firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -42,6 +43,8 @@ const STATE_INTERVALS = {
 };
 
 function MediaDisplay({ url, loaded, onLoad, alt, type = 'image' }) {
+  const { t } = useTranslation();
+
   if (!url) return null;
 
   if (type === 'image') {
@@ -64,13 +67,14 @@ function MediaDisplay({ url, loaded, onLoad, alt, type = 'image' }) {
     <Box sx={{ textAlign: 'center', mt: 1 }}>
       <audio controls>
         <source src={url} type="audio/mp3" />
-        Your browser does not support the audio element.
+        {t('audioNotSupported')}
       </audio>
     </Box>
   );
 }
 
 function CardDisplay({ card, show, onShow, onFeedback }) {
+  const { t } = useTranslation();
   const { urls, loaded, setLoaded } = useMediaUrls(card, auth.currentUser.uid);
 
   return (
@@ -82,7 +86,6 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
         alt="question"
       />
       <MediaDisplay url={urls.QAudio} type="audio" />
-
       <Typography
         variant="h6"
         align="center"
@@ -102,7 +105,6 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
             alt="answer"
           />
           <MediaDisplay url={urls.AAudio} type="audio" />
-
           <Typography
             variant="h6"
             align="center"
@@ -120,7 +122,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
               onClick={() => onFeedback(false)}
               data-tour="card-again"
             >
-              Again
+              {t('again')}
             </Button>
             <Button
               variant="contained"
@@ -128,14 +130,14 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
               onClick={() => onFeedback(true)}
               data-tour="card-good"
             >
-              Good
+              {t('good')}
             </Button>
           </Box>
         </>
       ) : (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Button variant="contained" onClick={onShow} data-tour="card-show">
-            Show
+            {t('show')}
           </Button>
         </Box>
       )}
@@ -144,6 +146,7 @@ function CardDisplay({ card, show, onShow, onFeedback }) {
 }
 
 export default function ReviewComponent() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const {
@@ -206,10 +209,10 @@ export default function ReviewComponent() {
       curCard !== prevCardRef.current &&
       prevCardRef.current !== null
     ) {
-      notifications.show('Flashcard Review', 'You have cards ready to review!');
+      notifications.show(t('flashcardReview'), t('cardsReady'));
     }
     prevCardRef.current = curCard;
-  }, [curCard, notifications]);
+  }, [curCard, notifications, t]);
 
   const updateCardState = async (card, correct) => {
     const newState = Math.max(0, card.state + (correct ? 1 : -1));
@@ -279,7 +282,7 @@ export default function ReviewComponent() {
             onClick={() => setOpenAddCardDialog(true)}
             data-tour="add-card"
           >
-            Add Card
+            {t('addCard')}
           </Button>
 
           <ToggleButton
@@ -289,7 +292,9 @@ export default function ReviewComponent() {
             color="primary"
             data-tour="toggle-notifications"
           >
-            {notifications.enabled ? 'Notifications ON' : 'Notifications OFF'}
+            {notifications.enabled
+              ? t('notificationsOn')
+              : t('notificationsOff')}
           </ToggleButton>
 
           <Button
@@ -298,7 +303,7 @@ export default function ReviewComponent() {
             onClick={() => setOpenCardManagerDrawer(true)}
             data-tour="view-cards"
           >
-            View Cards
+            {t('viewCards')}
           </Button>
         </Box>
       )}
@@ -359,7 +364,7 @@ export default function ReviewComponent() {
       ) : (
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           {!cards?.length ? (
-            <Typography variant="h6">You have no cards. Add some</Typography>
+            <Typography variant="h6">{t('noCards')}</Typography>
           ) : (
             <CountdownCircle targetTime={earliestReviewDate} />
           )}

@@ -1,46 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 import { auth } from './Firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
 import SignIn from './Signin';
 import { AddCardComponent } from './AddCard';
 import ReviewComponent from './ReviewComponent';
 import CardManager from './CardManager';
 import ForgotPassword from './ForgotPassword';
 import HeaderBar from './HeaderBar';
-import CssBaseline from '@mui/material/CssBaseline';
 import SignUp from './SignUp';
 import Profile from './Profile';
 import NotFound from './NotFound';
 import LandingPage from './LandingPage';
+import { MUIWrapper } from './MUIWrapper.jsx';
 import steps from './steps.jsx';
 
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { useSwipeable } from 'react-swipeable';
 import { TourProvider, useTour } from '@reactour/tour';
+
+import CssBaseline from '@mui/material/CssBaseline';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
-import {
-  Box,
-  createTheme,
-  Paper,
-  Tabs,
-  Tab,
-  ThemeProvider,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, Paper, Tabs, Tab, useMediaQuery, useTheme } from '@mui/material';
 
 function App() {
-  const theme = createTheme({
-    colorSchemes: {
-      light: true,
-      dark: true,
-    },
-  });
   return (
-    <ThemeProvider theme={theme}>
+    <MUIWrapper>
       <CssBaseline enableColorScheme />
       <BrowserRouter>
         <Routes>
@@ -53,7 +42,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
+    </MUIWrapper>
   );
 }
 
@@ -88,6 +77,7 @@ function Application() {
 }
 
 function Memorization() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tabIndex, setTabIndex] = useState(1);
@@ -137,9 +127,13 @@ function Memorization() {
             textColor="primary"
             indicatorColor="primary"
           >
-            <Tab icon={<NoteAddIcon />} label="Add Card" data-tour="add-card" />
-            <Tab icon={<VisibilityIcon />} label="Review" />
-            <Tab icon={<StorageIcon />} label="My Cards" />
+            <Tab
+              icon={<NoteAddIcon />}
+              label={t('addCard')}
+              data-tour="add-card"
+            />
+            <Tab icon={<VisibilityIcon />} label={t('review')} />
+            <Tab icon={<StorageIcon />} label={t('myCards')} />
           </Tabs>
 
           <div
