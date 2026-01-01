@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink, NavLink } from 'react-router';
+import { Link as RouterLink, NavLink, useLocation } from 'react-router';
 
 import {
   AppBar,
@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function HeaderBar({ showSignOut = false }) {
   const { t } = useTranslation();
+  const location = useLocation();
   const { setIsOpen, setCurrentStep } = useTour();
 
   return (
@@ -48,17 +49,19 @@ export default function HeaderBar({ showSignOut = false }) {
           </Stack>
         </Link>
         <Stack direction="row" spacing={1}>
-          <Tooltip title={t('help')}>
-            <IconButton
-              aria-label="help"
-              onClick={() => {
-                setIsOpen(true);
-                setCurrentStep(0);
-              }}
-            >
-              <HelpOutlineIcon />
-            </IconButton>
-          </Tooltip>
+          {location.pathname === '/app' && (
+            <Tooltip title={t('help')}>
+              <IconButton
+                aria-label="help"
+                onClick={() => {
+                  setIsOpen(true);
+                  setCurrentStep(0);
+                }}
+              >
+                <HelpOutlineIcon />
+              </IconButton>
+            </Tooltip>
+          )}
           <LanguagePicker />
           <ThemeToggle />
           {showSignOut && (
