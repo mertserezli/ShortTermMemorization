@@ -3,15 +3,17 @@ import { useTranslation } from 'react-i18next';
 
 import { auth, db } from './Firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { collection, doc, updateDoc } from 'firebase/firestore';
+
 import { ResizableBox } from 'react-resizable';
+import { useTour } from '@reactour/tour';
 
 import { AddCardComponent } from './AddCard';
 import Loading from './LoadingComponent';
 import CountdownCircle from './CountdownCircle';
 import CardManager from './CardManager';
 import { useNotifications, useMediaUrls } from './hooks';
-
-import { collection, doc, updateDoc } from 'firebase/firestore';
 
 import {
   Box,
@@ -24,12 +26,14 @@ import {
   useTheme,
   useMediaQuery,
   ToggleButton,
+  Snackbar,
+  IconButton,
+  SnackbarContent,
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import StorageIcon from '@mui/icons-material/Storage';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTour } from '@reactour/tour';
+import CloseIcon from '@mui/icons-material/Close';
 
 const STATE_INTERVALS = {
   0: 5, // 5 seconds
@@ -159,8 +163,10 @@ export default function ReviewComponent() {
 
   const [openAddCardDialog, setOpenAddCardDialog] = useState(false);
   const [openCardManagerDrawer, setOpenCardManagerDrawer] = useState(false);
+  const [undoSnackOpen, setUndoSnackOpen] = useState(false);
 
   const [curCard, setCurCard] = useState(null);
+  const [lastReviewSnapshot, setLastReviewSnapshot] = useState(null);
   const [show, setShow] = useState(false);
   const [now, setNow] = useState(Date.now());
 
@@ -239,6 +245,14 @@ export default function ReviewComponent() {
   }, [cardsToReview.length, notifications, t]);
 
   const updateCardState = async (card, correct) => {
+    setLastReviewSnapshot({
+      id: card.id,
+      originalState: card.state,
+      originalReviewDate: card.reviewDate,
+      fullCardData: card,
+    });
+    setUndoSnackOpen(true);
+
     setShow(false);
     setOptimisticReviewedIds((prev) => [...prev, card.id]);
 
@@ -260,6 +274,24 @@ export default function ReviewComponent() {
       console.error('Failed to update card', error);
       // Optional: Rollback optimistic update on error
       setOptimisticReviewedIds((prev) => prev.filter((id) => id !== card.id));
+    });
+  };
+
+  const handleUndo = async () => {
+    if (!lastReviewSnapshot) return;
+
+    setUndoSnackOpen(false);
+
+    setOptimisticReviewedIds((prev) =>
+      prev.filter((id) => id !== lastReviewSnapshot.id)
+    );
+
+    setShow(false);
+    setCurCard(lastReviewSnapshot.fullCardData);
+
+    await updateDoc(doc(path, lastReviewSnapshot.id), {
+      state: lastReviewSnapshot.originalState,
+      reviewDate: lastReviewSnapshot.originalReviewDate,
     });
   };
 
@@ -380,6 +412,39 @@ export default function ReviewComponent() {
           </Box>
         </ResizableBox>
       </Drawer>
+
+      <Snackbar
+        open={undoSnackOpen}
+        autoHideDuration={4000}
+        onClose={(event, reason) => {
+          if (reason === 'clickaway') return;
+          setUndoSnackOpen(false);
+        }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <SnackbarContent
+          message={t('cardUpdated')}
+          action={
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                onClick={handleUndo}
+              >
+                {t('undo')}
+              </Button>
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={() => setUndoSnackOpen(false)}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          }
+        />
+      </Snackbar>
 
       {curCard ? (
         <CardDisplay
