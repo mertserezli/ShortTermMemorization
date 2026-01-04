@@ -131,6 +131,8 @@ i18n.use(initReactI18next).init({
         flashcardReview: 'Flashcard Review',
         cardsReady: 'You have cards ready to review!',
         audioNotSupported: 'Your browser does not support the audio element.',
+        cardUpdated: 'Card updated',
+        undo: 'Undo',
 
         // AddCardComponent
         addCard: 'Add Card',
@@ -279,6 +281,8 @@ i18n.use(initReactI18next).init({
         flashcardReview: 'Kart Tekrarı',
         cardsReady: 'Tekrar etmeye hazır kartlarınız var!',
         audioNotSupported: 'Tarayıcınız ses öğesini desteklemiyor.',
+        cardUpdated: 'Kart güncellendi',
+        undo: 'Geri al',
 
         // AddCardComponent
         addCard: 'Kart Ekle',
