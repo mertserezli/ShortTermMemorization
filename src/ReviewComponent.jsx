@@ -159,12 +159,14 @@ export default function ReviewComponent() {
 
   const [openAddCardDialog, setOpenAddCardDialog] = useState(false);
   const [openCardManagerDrawer, setOpenCardManagerDrawer] = useState(false);
+
   const [curCard, setCurCard] = useState(null);
   const [show, setShow] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   const path = collection(db, 'allCards', user.uid, 'cards');
   const [cardsCollection] = useCollection(path);
+  const [optimisticReviewedIds, setOptimisticReviewedIds] = useState([]);
 
   const cards =
     cardsCollection?.docs
@@ -175,7 +177,10 @@ export default function ReviewComponent() {
       }))
       .filter((card) => card.state !== 7) ?? [];
 
-  const cardsToReview = cards.filter((c) => c.reviewDate.getTime() <= now);
+  const cardsToReview = cards.filter(
+    (c) =>
+      c.reviewDate.getTime() <= now && !optimisticReviewedIds.includes(c.id)
+  );
 
   const earliestReviewDate =
     cards.length > 0
@@ -189,6 +194,25 @@ export default function ReviewComponent() {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (optimisticReviewedIds.length === 0) return;
+
+    // If the card exists in "cards" but the reviewDate is now in the future,
+    // Firestore has successfully updated. We can remove it from our ignore list.
+    const confirmedIds = cards
+      .filter(
+        (c) =>
+          c.reviewDate.getTime() > now && optimisticReviewedIds.includes(c.id)
+      )
+      .map((c) => c.id);
+
+    if (confirmedIds.length > 0) {
+      setOptimisticReviewedIds((prev) =>
+        prev.filter((id) => !confirmedIds.includes(id))
+      );
+    }
+  }, [cards, now, optimisticReviewedIds]);
 
   useEffect(() => {
     if (curCard && !cards.find((c) => c.id === curCard.id)) {
@@ -215,25 +239,28 @@ export default function ReviewComponent() {
   }, [curCard, notifications, t]);
 
   const updateCardState = async (card, correct) => {
+    setShow(false);
+    setOptimisticReviewedIds((prev) => [...prev, card.id]);
+
+    const nextCardsToReview = cardsToReview.filter((c) => c.id !== card.id);
+    const nextCard = nextCardsToReview.length > 0 ? nextCardsToReview[0] : null;
+
+    setCurCard(nextCard);
+
     const newState = Math.max(0, card.state + (correct ? 1 : -1));
     const newReviewDate = new Date();
     newReviewDate.setSeconds(
       newReviewDate.getSeconds() + STATE_INTERVALS[newState]
     );
 
-    setShow(false);
-
-    const nextCardsToReview = cards.filter(
-      (c) => c.id !== card.id && c.reviewDate.getTime() <= Date.now()
-    );
-    const nextCard = nextCardsToReview.length > 0 ? nextCardsToReview[0] : null;
-
-    await updateDoc(doc(path, card.id), {
+    updateDoc(doc(path, card.id), {
       reviewDate: newReviewDate,
       state: newState,
+    }).catch((error) => {
+      console.error('Failed to update card', error);
+      // Optional: Rollback optimistic update on error
+      setOptimisticReviewedIds((prev) => prev.filter((id) => id !== card.id));
     });
-
-    setCurCard(nextCard);
   };
 
   if (
