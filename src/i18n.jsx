@@ -9,6 +9,8 @@ i18n.use(initReactI18next).init({
         // HeaderBar
         profile: 'Profile',
         help: 'Help',
+        lightMode: 'Light Mode',
+        darkMode: 'Dark Mode',
         theme: 'Theme',
         signOut: 'Sign Out',
 
@@ -154,6 +156,8 @@ i18n.use(initReactI18next).init({
         // HeaderBar
         profile: 'Profil',
         help: 'Yardım',
+        lightMode: 'Açık Mod',
+        darkMode: 'Koyu Mod',
         theme: 'Tema',
         signOut: 'Çıkış',
 

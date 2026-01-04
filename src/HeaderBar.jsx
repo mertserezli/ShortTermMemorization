@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, NavLink, useLocation } from 'react-router';
 
 import {
@@ -10,6 +10,9 @@ import {
   Tooltip,
   Select,
   MenuItem,
+  useTheme,
+  useMediaQuery,
+  Menu,
 } from '@mui/material';
 import Link from '@mui/material/Link';
 import { useColorScheme } from '@mui/material/styles';
@@ -19,6 +22,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LanguageIcon from '@mui/icons-material/Language';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import { auth } from './Firebase';
 import Logo from './icons/logo.png';
@@ -30,6 +34,10 @@ export default function HeaderBar({ showSignOut = false }) {
   const { t } = useTranslation();
   const location = useLocation();
   const { setIsOpen, setCurrentStep } = useTour();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const [anchorEl, setAnchorEl] = useState(null);
 
   return (
     <AppBar position="static" color="default" elevation={1}>
@@ -44,7 +52,7 @@ export default function HeaderBar({ showSignOut = false }) {
           <Stack direction="row" alignItems="center" spacing={1}>
             <img src={Logo} alt="logo" style={{ width: 28, height: 28 }} />
             <Typography variant="h6" component="div">
-              Short Term Memo
+              ShortTermMemo
             </Typography>
           </Stack>
         </Link>
@@ -63,23 +71,63 @@ export default function HeaderBar({ showSignOut = false }) {
             </Tooltip>
           )}
           <LanguagePicker />
-          <ThemeToggle />
-          {showSignOut && (
-            <Tooltip title={t('profile')}>
-              <IconButton
-                component={NavLink}
-                to="/profile"
-                color="primary"
-                aria-label="profile"
-                style={({ isActive }) => ({
-                  color: isActive ? '#1976d2' : 'inherit',
-                })}
-              >
-                <AccountCircleIcon />
-              </IconButton>
-            </Tooltip>
+          {!isMobile && (
+            <>
+              <ThemeToggle />
+              {showSignOut && (
+                <Tooltip title={t('profile')}>
+                  <IconButton
+                    component={NavLink}
+                    to="/profile"
+                    color="primary"
+                    aria-label="profile"
+                    style={({ isActive }) => ({
+                      color: isActive ? '#1976d2' : 'inherit',
+                    })}
+                  >
+                    <AccountCircleIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {showSignOut && (
+                <Tooltip title={t('signOut')} enterDelay={0} leaveDelay={0}>
+                  <IconButton
+                    color="primary"
+                    onClick={() => auth.signOut()}
+                    aria-label="sign out"
+                  >
+                    <LogoutIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
           )}
-          {showSignOut && <SignOut />}
+          {isMobile && (
+            <>
+              <IconButton onClick={(event) => setAnchorEl(event.currentTarget)}>
+                <MoreVertIcon />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <ThemeToggle />
+                {showSignOut && (
+                  <MenuItem component={NavLink} to="/profile">
+                    <AccountCircleIcon sx={{ mr: 1 }} />
+                    {t('profile')}
+                  </MenuItem>
+                )}
+                {showSignOut && (
+                  <MenuItem onClick={() => auth.signOut()}>
+                    <LogoutIcon sx={{ mr: 1 }} />
+                    {t('signOut')}
+                  </MenuItem>
+                )}
+              </Menu>
+            </>
+          )}
         </Stack>
       </Toolbar>
     </AppBar>
@@ -95,7 +143,6 @@ function LanguagePicker() {
       onChange={(event) => setLanguage(event.target.value)}
       size="small"
       variant="outlined"
-      sx={{ ml: 1, minWidth: 60 }}
       renderValue={(value) => {
         switch (value) {
           case 'en':
@@ -115,9 +162,23 @@ function LanguagePicker() {
 
 function ThemeToggle() {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { mode, setMode } = useColorScheme();
 
   if (!mode) return null;
+
+  if (isMobile)
+    return (
+      <MenuItem onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}>
+        {mode === 'dark' ? (
+          <Brightness7Icon sx={{ mr: 1 }} />
+        ) : (
+          <Brightness4Icon sx={{ mr: 1 }} />
+        )}
+        {mode === 'dark' ? t('lightMode') : t('darkMode')}
+      </MenuItem>
+    );
 
   return (
     <Tooltip title={t('theme')} enterDelay={0} leaveDelay={0}>
@@ -126,21 +187,6 @@ function ThemeToggle() {
         color="inherit"
       >
         {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-      </IconButton>
-    </Tooltip>
-  );
-}
-
-function SignOut() {
-  const { t } = useTranslation();
-  function handleSignOut() {
-    auth.signOut();
-  }
-
-  return (
-    <Tooltip title={t('signOut')} enterDelay={0} leaveDelay={0}>
-      <IconButton color="primary" onClick={handleSignOut} aria-label="sign out">
-        <LogoutIcon />
       </IconButton>
     </Tooltip>
   );
