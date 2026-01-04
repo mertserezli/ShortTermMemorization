@@ -226,17 +226,17 @@ export default function ReviewComponent() {
     }
   }, [cardsToReview, curCard, cards]);
 
-  const prevCardRef = useRef(null);
+  const prevReviewCountRef = useRef(cardsToReview.length);
   useEffect(() => {
-    if (
-      curCard &&
-      curCard !== prevCardRef.current &&
-      prevCardRef.current !== null
-    ) {
+    const becameReady =
+      prevReviewCountRef.current === 0 && cardsToReview.length > 0;
+
+    if (becameReady) {
       notifications.show(t('flashcardReview'), t('cardsReady'));
     }
-    prevCardRef.current = curCard;
-  }, [curCard, notifications, t]);
+
+    prevReviewCountRef.current = cardsToReview.length;
+  }, [cardsToReview.length, notifications, t]);
 
   const updateCardState = async (card, correct) => {
     setShow(false);
