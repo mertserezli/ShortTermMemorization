@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
@@ -10,6 +10,7 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [scale, setScale] = useState(1);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -17,6 +18,23 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
 
   const rightLabelOpacity = useTransform(x, [50, screenWidth / 3], [0, 1]);
   const leftLabelOpacity = useTransform(x, [-screenWidth / 3, -50], [1, 0]);
+
+  const handlePointerDown = () => {
+    if (!show) {
+      setScale(0.95);
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!show) {
+      setScale(1);
+      onShow();
+    }
+  };
+
+  const handlePointerCancel = () => {
+    setScale(1);
+  };
 
   if (!isMobile) return <>{children}</>;
 
@@ -30,6 +48,7 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
         margin: '0 auto',
         height: '80vh',
       }}
+      animate={{ scale }}
       drag={show ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.5}
@@ -43,10 +62,6 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
           }
         }
       }}
-      onTap={() => {
-        if (!show) onShow(); // reveal answer on tap
-      }}
-      whileTap={{ scale: 0.95 }} // small press feedback
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <motion.div
@@ -77,7 +92,18 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
         ❌ {t('again')}
       </motion.div>
 
-      {children}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        style={{
+          height: '100%',
+          cursor: show ? 'grab' : 'pointer',
+        }}
+      >
+        {children}
+      </div>
+
       {show && !hasSwiped && (
         <Box
           sx={{
@@ -88,7 +114,7 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
             display: 'flex',
             alignItems: 'center',
             gap: 2,
-            pointerEvents: 'none', // don't block interaction
+            pointerEvents: 'none',
             color: 'rgba(255,255,255,0.8)',
             fontSize: '1.2rem',
             fontWeight: 'bold',
