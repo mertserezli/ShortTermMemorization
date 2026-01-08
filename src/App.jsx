@@ -18,7 +18,6 @@ import LandingPage from './LandingPage';
 import { MUIWrapper } from './MUIWrapper.jsx';
 import steps from './steps.jsx';
 
-import { useSwipeable } from 'react-swipeable';
 import { TourProvider, useTour } from '@reactour/tour';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -87,12 +86,6 @@ function Memorization() {
     setTabIndex(newValue);
   };
 
-  const handlers = useSwipeable({
-    onSwipedLeft: () => setTabIndex((prev) => Math.min(prev + 1, 2)),
-    onSwipedRight: () => setTabIndex((prev) => Math.max(prev - 1, 0)),
-    trackMouse: true,
-  });
-
   if (
     isTourOpen &&
     1 <= currentTourStep &&
@@ -136,30 +129,21 @@ function Memorization() {
             <Tab icon={<StorageIcon />} label={t('myCards')} />
           </Tabs>
 
-          <div
-            {...handlers}
-            style={{
-              height: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {tabIndex === 0 && (
-              <Box sx={{ p: 2 }}>
-                <AddCardComponent />
-              </Box>
-            )}
-            {tabIndex === 1 && (
-              <Box sx={{ p: 2 }}>
-                <ReviewComponent />
-              </Box>
-            )}
-            {tabIndex === 2 && (
-              <Box sx={{ p: 2 }}>
-                <CardManager />
-              </Box>
-            )}
-          </div>
+          {tabIndex === 0 && (
+            <Box sx={{ p: 2 }}>
+              <AddCardComponent onClose={() => {}} />
+            </Box>
+          )}
+          {tabIndex === 1 && (
+            <Box sx={{ p: 2 }}>
+              <ReviewComponent />
+            </Box>
+          )}
+          {tabIndex === 2 && (
+            <Box sx={{ p: 2 }}>
+              <CardManager />
+            </Box>
+          )}
         </>
       ) : (
         <Box

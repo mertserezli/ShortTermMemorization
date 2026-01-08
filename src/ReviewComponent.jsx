@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ResizableBox } from 'react-resizable';
 
 import { auth, db } from './Firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 
-import { ResizableBox } from 'react-resizable';
 import { useTour } from '@reactour/tour';
 
 import { AddCardComponent } from './AddCard';
 import Loading from './LoadingComponent';
 import CountdownCircle from './CountdownCircle';
 import CardManager from './CardManager';
+import SwipeableCard from './SwipeableCard.jsx';
 import { useNotifications, useMediaUrls } from './hooks';
 
 import {
@@ -236,11 +237,9 @@ export default function ReviewComponent() {
   useEffect(() => {
     const becameReady =
       prevReviewCountRef.current === 0 && cardsToReview.length > 0;
-
     if (becameReady) {
       notifications.show(t('flashcardReview'), t('cardsReady'));
     }
-
     prevReviewCountRef.current = cardsToReview.length;
   }, [cardsToReview.length, notifications, t]);
 
@@ -321,11 +320,6 @@ export default function ReviewComponent() {
 
   return (
     <Box data-tour="display">
-      <div
-        style={{ display: 'hidden' }}
-        data-tour="card-manager-open"
-        data-value={{ openCardManagerDrawer }}
-      />
       {!isMobile && (
         <Box
           sx={{
@@ -447,12 +441,18 @@ export default function ReviewComponent() {
       </Snackbar>
 
       {curCard ? (
-        <CardDisplay
-          card={curCard}
+        <SwipeableCard
           show={show}
           onShow={() => setShow(true)}
           onFeedback={(correct) => updateCardState(curCard, correct)}
-        />
+        >
+          <CardDisplay
+            card={curCard}
+            show={show}
+            onShow={() => setShow(true)}
+            onFeedback={(correct) => updateCardState(curCard, correct)}
+          />
+        </SwipeableCard>
       ) : (
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           {!cards?.length ? (
