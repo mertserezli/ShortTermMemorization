@@ -17,18 +17,13 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { InputAdornment, LinearProgress, Tooltip } from '@mui/material';
+import { InputAdornment, Tooltip } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 
 import HeaderBar from './HeaderBar';
-import {
-  evaluatePasswordStrength,
-  getPasswordStrengthProgressValue,
-  passwordStrengthColorMap,
-  passwordStrengthHintKeyMap,
-} from './passwordStrength';
+import PasswordStrength from './PasswordStrength.jsx';
 
 export default function SignUp() {
   const { t } = useTranslation();
@@ -38,7 +33,6 @@ export default function SignUp() {
   const [emailError, setEmailError] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [password, setPassword] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [createUserWithEmailAndPassword, createdUser, creating, createError] =
     useCreateUserWithEmailAndPassword(auth);
@@ -147,9 +141,7 @@ export default function SignUp() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => {
-                const pwd = e.target.value;
-                setPassword(pwd);
-                setPasswordStrength(evaluatePasswordStrength(pwd));
+                setPassword(e.target.value);
               }}
               onKeyDown={(e) => {
                 setIsCapsLockOn(
@@ -176,27 +168,7 @@ export default function SignUp() {
                 ),
               }}
             />
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {t('passwordStrength')}: {t(passwordStrength)}
-            </Typography>
-            <Tooltip
-              title={t(passwordStrengthHintKeyMap[passwordStrength]) || ''}
-            >
-              <LinearProgress
-                variant="determinate"
-                value={getPasswordStrengthProgressValue(passwordStrength)}
-                sx={{
-                  mt: 1,
-                  height: 8,
-                  borderRadius: 5,
-                  backgroundColor: '#e0e0e0',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor:
-                      passwordStrengthColorMap[passwordStrength] || '#90caf9',
-                  },
-                }}
-              />
-            </Tooltip>
+            <PasswordStrength password={password} />
             <Button
               type="submit"
               fullWidth

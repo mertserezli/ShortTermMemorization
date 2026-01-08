@@ -22,18 +22,12 @@ import {
   InputAdornment,
   IconButton,
   Tooltip,
-  LinearProgress,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 import HeaderBar from './HeaderBar';
-import {
-  evaluatePasswordStrength,
-  getPasswordStrengthProgressValue,
-  passwordStrengthColorMap,
-  passwordStrengthHintKeyMap,
-} from './passwordStrength';
+import PasswordStrength from './PasswordStrength.jsx';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -45,7 +39,6 @@ export default function Profile() {
   const [upgradeEmail, setUpgradeEmail] = useState('');
   const [upgradePassword, setUpgradePassword] = useState('');
 
-  const [passwordStrength, setPasswordStrength] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState('');
@@ -166,9 +159,7 @@ export default function Profile() {
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => {
-                  const pwd = e.target.value;
-                  setNewPassword(pwd);
-                  setPasswordStrength(evaluatePasswordStrength(pwd));
+                  setNewPassword(e.target.value);
                 }}
                 onKeyDown={(e) =>
                   setIsCapsLockOn(
@@ -191,27 +182,7 @@ export default function Profile() {
                   ),
                 }}
               />
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {t('passwordStrength')}: {t(passwordStrength)}
-              </Typography>
-              <Tooltip
-                title={t(passwordStrengthHintKeyMap[passwordStrength]) || ''}
-              >
-                <LinearProgress
-                  variant="determinate"
-                  value={getPasswordStrengthProgressValue(passwordStrength)}
-                  sx={{
-                    mt: 1,
-                    height: 8,
-                    borderRadius: 5,
-                    backgroundColor: '#e0e0e0',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor:
-                        passwordStrengthColorMap[passwordStrength] || '#90caf9',
-                    },
-                  }}
-                />
-              </Tooltip>
+              <PasswordStrength password={newPassword} />
               <Button
                 type="submit"
                 fullWidth
@@ -249,9 +220,7 @@ export default function Profile() {
                 type={showPassword ? 'text' : 'password'}
                 value={upgradePassword}
                 onChange={(e) => {
-                  const pwd = e.target.value;
-                  setUpgradePassword(pwd);
-                  setPasswordStrength(evaluatePasswordStrength(pwd));
+                  setUpgradePassword(e.target.value);
                 }}
                 onKeyDown={(e) =>
                   setIsCapsLockOn(
@@ -274,27 +243,7 @@ export default function Profile() {
                   ),
                 }}
               />
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {t('passwordStrength')}: {t(passwordStrength)}
-              </Typography>
-              <Tooltip
-                title={t(passwordStrengthHintKeyMap[passwordStrength]) || ''}
-              >
-                <LinearProgress
-                  variant="determinate"
-                  value={getPasswordStrengthProgressValue(passwordStrength)}
-                  sx={{
-                    mt: 1,
-                    height: 8,
-                    borderRadius: 5,
-                    backgroundColor: '#e0e0e0',
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor:
-                        passwordStrengthColorMap[passwordStrength] || '#90caf9',
-                    },
-                  }}
-                />
-              </Tooltip>
+              <PasswordStrength password={upgradePassword} />
               <Button
                 type="submit"
                 fullWidth
