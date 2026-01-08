@@ -18,14 +18,10 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
   const rightLabelOpacity = useTransform(x, [50, screenWidth / 3], [0, 1]);
   const leftLabelOpacity = useTransform(x, [-screenWidth / 3, -50], [1, 0]);
 
-  const cardRef = React.useRef(null);
-  const [scale, setScale] = React.useState(1);
-
   if (!isMobile) return <>{children}</>;
 
   return (
     <motion.div
-      ref={cardRef}
       style={{
         x,
         rotate,
@@ -34,7 +30,6 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
         margin: '0 auto',
         height: '80vh',
       }}
-      animate={{ scale }}
       drag={show ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.5}
@@ -48,43 +43,10 @@ export default function SwipeableCard({ show, onShow, onFeedback, children }) {
           }
         }
       }}
-      onTapStart={(event, info) => {
-        if (!show && cardRef.current) {
-          const rect = cardRef.current.getBoundingClientRect();
-          const tapX = info.point.x;
-          const tapY = info.point.y;
-
-          const isInside =
-            tapX >= rect.left &&
-            tapX <= rect.right &&
-            tapY >= rect.top &&
-            tapY <= rect.bottom;
-
-          if (isInside) {
-            setScale(0.95);
-          }
-        }
+      onTap={() => {
+        if (!show) onShow(); // reveal answer on tap
       }}
-      onTapCancel={() => setScale(1)}
-      onTap={(event, info) => {
-        setScale(1);
-
-        if (!show && cardRef.current) {
-          const rect = cardRef.current.getBoundingClientRect();
-          const tapX = info.point.x;
-          const tapY = info.point.y;
-
-          const isInside =
-            tapX >= rect.left &&
-            tapX <= rect.right &&
-            tapY >= rect.top &&
-            tapY <= rect.bottom;
-
-          if (isInside) {
-            onShow();
-          }
-        }
-      }}
+      whileTap={{ scale: 0.95 }} // small press feedback
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <motion.div
